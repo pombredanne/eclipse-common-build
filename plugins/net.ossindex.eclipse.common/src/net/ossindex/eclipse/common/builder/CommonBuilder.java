@@ -84,7 +84,8 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 		System.out.println("FULL BUILD");
 		try
 		{
-			getProject().accept(getBuildVisitor());
+			IResourceVisitor visitor = getBuildVisitor();
+			if(visitor != null) getProject().accept(getBuildVisitor());
 		}
 		catch (CoreException e)
 		{
@@ -109,7 +110,8 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 		System.out.println("INCREMENTAL BUILD");
 		try
 		{
-			delta.accept(getDeltaVisitor());
+			IResourceDeltaVisitor visitor = getDeltaVisitor();
+			if(visitor != null) delta.accept(visitor);
 		}
 		catch (CoreException e)
 		{

@@ -42,7 +42,7 @@ import org.eclipse.core.runtime.CoreException;
  * @author Ken Duck
  *
  */
-public class CBuildVisitor implements IResourceVisitor, IResourceDeltaVisitor
+public abstract class CBuildVisitor implements IResourceVisitor, IResourceDeltaVisitor
 {
 	/**
 	 * Acceptable C/C++ file extensions.
@@ -69,9 +69,13 @@ public class CBuildVisitor implements IResourceVisitor, IResourceDeltaVisitor
 		if(isCppCompilationUnit(resource))
 		{
 			System.out.println("  C VISIT: " + resource);
+			
+			build(resource);
 		}
 		return true;
 	}
+
+	protected abstract void build(IResource resource);
 
 	/** Return true if this is a C/C++ compilation unit
 	 * 
