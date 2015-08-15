@@ -26,10 +26,8 @@
  */
 package net.ossindex.eclipse.common.builder;
 
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.cdt.core.model.CModelException;
 import org.eclipse.cdt.core.model.CoreModel;
@@ -58,21 +56,6 @@ import org.eclipse.core.runtime.IPath;
  */
 public abstract class CBuildVisitor implements IResourceVisitor, IResourceDeltaVisitor
 {
-	/**
-	 * Acceptable C/C++ file extensions.
-	 */
-	private static Set<String> extensions = new HashSet<String>();
-	
-	/**
-	 * FIXME: There is probably an eclipse specific way to get acceptable file extensions.
-	 */
-	static
-	{
-		extensions.add(".c");
-		extensions.add(".cc");
-		extensions.add(".cpp");
-		extensions.add(".cxx");
-	}
 	/*
 	 * (non-Javadoc)
 	 * @see org.eclipse.core.resources.IResourceVisitor#visit(org.eclipse.core.resources.IResource)
@@ -100,11 +83,10 @@ public abstract class CBuildVisitor implements IResourceVisitor, IResourceDeltaV
 	{
 		if(resource instanceof IFile)
 		{
+			IProject project = resource.getProject();
 			String name = resource.getName();
-			for(String extension: extensions)
-			{
-				if(name.endsWith(extension)) return true;
-			}
+			return CoreModel.isValidCXXSourceUnitName(project, name) ||
+					CoreModel.isValidCSourceUnitName(project, name);
 		}
 		return false;
 	}
