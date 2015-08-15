@@ -54,8 +54,6 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	@Override
 	protected IProject[] build(int kind, Map<String, String> args, IProgressMonitor monitor) throws CoreException
 	{
-		System.out.println("Custom builder triggered");  
-
 		// get the project to build  
 		getProject();  
 
@@ -81,7 +79,6 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	 */
 	private void fullBuild(IProgressMonitor monitor)
 	{
-		System.out.println("FULL BUILD");
 		try
 		{
 			IResourceVisitor visitor = getBuildVisitor();
@@ -107,7 +104,6 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	 */
 	private void incrementalBuild(IResourceDelta delta, IProgressMonitor monitor)
 	{
-		System.out.println("INCREMENTAL BUILD");
 		try
 		{
 			IResourceDeltaVisitor visitor = getDeltaVisitor();
