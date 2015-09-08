@@ -47,15 +47,29 @@ import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 
 /** Build visitor that identifies appropriate files, collects interesting
  * build information, and calls a method that will be useful for sub-classing.
+ * 
+ * This class is responsible for managing progress.
  * 
  * @author Ken Duck
  *
  */
 public abstract class CBuildVisitor implements IResourceVisitor, IResourceDeltaVisitor
 {
+	/**
+	 * Progress monitor
+	 */
+	private SubMonitor progress;
+	
+	public CBuildVisitor(IProgressMonitor monitor)
+	{
+		progress = SubMonitor.convert(monitor);
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.eclipse.core.resources.IResourceVisitor#visit(org.eclipse.core.resources.IResource)
@@ -63,11 +77,16 @@ public abstract class CBuildVisitor implements IResourceVisitor, IResourceDeltaV
 	@Override
 	public boolean visit(IResource resource) throws CoreException
 	{
+		// Handle cancellation
 		if(isCppCompilationUnit(resource))
 		{
 //			System.out.println("  C VISIT: " + resource);
-//			
+			
+			// Regardless of the amount of progress reported so far,
+	        // use 2% of the space remaining in the monitor to process the next node.
+			progress.setWorkRemaining(50);
 			build(resource);
+			progress.worked(1);
 		}
 		return true;
 	}
@@ -203,5 +222,14 @@ public abstract class CBuildVisitor implements IResourceVisitor, IResourceDeltaV
 			}
 		}
 //		CoreModel.getDefault().setProjectDescription(project, projectDescription);
+	}
+	
+	/** Override the task name for the progress monitor
+	 * 
+	 * @param name
+	 */
+	protected void setTaskName(String name)
+	{
+		progress.setTaskName(name);
 	}
 }

@@ -64,11 +64,7 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 		else
 		{
 			IResourceDelta delta = getDelta(getProject());
-			if (delta == null) {
-				fullBuild(monitor);
-			} else {
-				incrementalBuild(delta, monitor);
-			}
+			incrementalBuild(delta, monitor);
 		}
 		return null;
 	}
@@ -81,8 +77,8 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	{
 		try
 		{
-			IResourceVisitor visitor = getBuildVisitor();
-			if(visitor != null) getProject().accept(getBuildVisitor());
+			IResourceVisitor visitor = getBuildVisitor(monitor);
+			if(visitor != null) getProject().accept(visitor);
 		}
 		catch (CoreException e)
 		{
@@ -92,10 +88,11 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	}
 
 	/** A Build Visitor is a class that actually performs the build operations.
+	 * @param monitor 
 	 * 
 	 * @return
 	 */
-	protected abstract IResourceVisitor getBuildVisitor();
+	protected abstract IResourceVisitor getBuildVisitor(IProgressMonitor monitor);
 
 	/**
 	 * 
@@ -106,7 +103,7 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	{
 		try
 		{
-			IResourceDeltaVisitor visitor = getDeltaVisitor();
+			IResourceDeltaVisitor visitor = getDeltaVisitor(monitor);
 			if(visitor != null) delta.accept(visitor);
 		}
 		catch (CoreException e)
@@ -116,5 +113,5 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 		}
 	}
 
-	protected abstract IResourceDeltaVisitor getDeltaVisitor();
+	protected abstract IResourceDeltaVisitor getDeltaVisitor(IProgressMonitor monitor);
 }
