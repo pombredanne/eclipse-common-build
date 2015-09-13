@@ -76,7 +76,7 @@ public abstract class JavaBuildVisitor implements IResourceVisitor, IResourceDel
 		// Handle cancellation
 		if(progress.isCanceled()) return false;
 
-		System.err.println("VISIT: " + resource);
+//		System.err.println("VISIT: " + resource);
 		if(isJavaFile(resource))
 		{
 			//System.out.println("  Java VISIT: " + resource);
