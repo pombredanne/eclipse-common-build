@@ -24,36 +24,50 @@
  *	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.ossindex.eclipse.common;
+package net.ossindex.eclipse.common.impl;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 
-/**
- * The activator class controls the plug-in life cycle
+import net.ossindex.eclipse.common.ICUtils;
+
+/** Stub utilities
+ * 
+ * @author Ken Duck
+ *
  */
-public class Activator implements BundleActivator {
+public class CUtilsStub implements ICUtils {
 
-	private static BundleContext context;
+	@Override
+	public void setProject(IProject project) {
+	}
 
-	static BundleContext getContext() {
-		return context;
+	@Override
+	public boolean isCppCompilationUnit(IResource resource) {
+		return false;
+	}
+
+	@Override
+	public String[] getIncludePaths(IResource resource) {
+		return new String[0];
+	}
+
+	@Override
+	public String[] getMacros(IResource resource) {
+		return new String[0];
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
+	 * @see net.ossindex.eclipse.common.ICUtils#isAvailable()
 	 */
-	public void start(BundleContext bundleContext) throws Exception {
-		Activator.context = bundleContext;
+	@Override
+	public boolean isAvailable() {
+		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
-	 */
-	public void stop(BundleContext bundleContext) throws Exception {
-		Activator.context = null;
+	@Override
+	public Object getResource(Object object) {
+		return object;
 	}
-
 }

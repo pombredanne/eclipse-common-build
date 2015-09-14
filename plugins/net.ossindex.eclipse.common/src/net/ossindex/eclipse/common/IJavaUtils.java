@@ -26,34 +26,61 @@
  */
 package net.ossindex.eclipse.common;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+import java.util.List;
 
-/**
- * The activator class controls the plug-in life cycle
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.IPath;
+
+/** Provide utilities that work with JavaProjects. This helps isolate the code
+ * so that it can be loaded or not depending on the installation situation.
+ * 
+ * @author Ken Duck
+ *
  */
-public class Activator implements BundleActivator {
-
-	private static BundleContext context;
-
-	static BundleContext getContext() {
-		return context;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
+public interface IJavaUtils
+{
+	/**
+	 * 
+	 * @param project
 	 */
-	public void start(BundleContext bundleContext) throws Exception {
-		Activator.context = bundleContext;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
+	public void setProject(IProject project);
+	
+	/**
+	 * 
+	 * @return
 	 */
-	public void stop(BundleContext bundleContext) throws Exception {
-		Activator.context = null;
-	}
+	List<IPath> getSourcePaths();
 
+	/**
+	 * 
+	 * @return
+	 */
+	List<IPath> getClassPaths();
+
+	/**
+	 * 
+	 * @param resource
+	 * @return
+	 */
+	public String[] getSourcePaths(IResource resource);
+
+	/** Get the class paths for the project
+	 * 
+	 * @param javaProject
+	 */
+	public String[] getClassPaths(IResource resource);
+
+	/** Returns true if the java utilities are available
+	 * 
+	 * @return
+	 */
+	public boolean isAvailable();
+
+	/**
+	 * 
+	 * @param resource
+	 * @return
+	 */
+	public Object getResource(Object resource);
 }

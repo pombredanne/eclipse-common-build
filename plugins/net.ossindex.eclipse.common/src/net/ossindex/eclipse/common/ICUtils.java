@@ -26,34 +26,51 @@
  */
 package net.ossindex.eclipse.common;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 
-/**
- * The activator class controls the plug-in life cycle
+/** Provide utilities that work with CProjects. This helps isolate the code
+ * so that it can be loaded or not depending on the installation situation.
+ * 
+ * @author Ken Duck
+ *
  */
-public class Activator implements BundleActivator {
-
-	private static BundleContext context;
-
-	static BundleContext getContext() {
-		return context;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
+public interface ICUtils
+{
+	/**
+	 * 
+	 * @param project
 	 */
-	public void start(BundleContext bundleContext) throws Exception {
-		Activator.context = bundleContext;
-	}
+	public void setProject(IProject project);
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
+	/** Return true if this is a C/C++ compilation unit
+	 * 
+	 * @param resource
+	 * @return
 	 */
-	public void stop(BundleContext bundleContext) throws Exception {
-		Activator.context = null;
-	}
+	public boolean isCppCompilationUnit(IResource resource);
+	
 
+	/**
+	 * Get the settings for the provided resource
+	 */
+	public String[] getIncludePaths(IResource resource);
+
+	/**
+	 * Get the settings for the provided resource
+	 */
+	public String[] getMacros(IResource resource);
+
+	/** Returns true if the C utilities are available
+	 * 
+	 * @return
+	 */
+	public boolean isAvailable();
+
+	/**
+	 * 
+	 * @param object
+	 * @return
+	 */
+	public Object getResource(Object object);
 }

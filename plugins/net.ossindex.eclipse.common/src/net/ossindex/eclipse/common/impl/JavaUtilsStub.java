@@ -24,36 +24,79 @@
  *	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.ossindex.eclipse.common;
+package net.ossindex.eclipse.common.impl;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+import java.util.LinkedList;
+import java.util.List;
 
-/**
- * The activator class controls the plug-in life cycle
+import net.ossindex.eclipse.common.IJavaUtils;
+
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.IPath;
+
+/** Java platform specific utilities stubs
+ * 
+ * @author Ken Duck
+ *
  */
-public class Activator implements BundleActivator {
+public class JavaUtilsStub implements IJavaUtils
+{
+	private List<IPath> sourcePaths = new LinkedList<IPath>();
+	private List<IPath> classPaths = new LinkedList<IPath>();
+	
+	public JavaUtilsStub()
+	{
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see net.ossindex.eclipse.common.IJavaUtils#setProject(org.eclipse.core.resources.IProject)
+	 */
+	public void setProject(IProject project)
+	{
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public List<IPath> getSourcePaths()
+	{
+		return sourcePaths;
+	}
 
-	private static BundleContext context;
+	/**
+	 * 
+	 * @return
+	 */
+	public List<IPath> getClassPaths()
+	{
+		return classPaths;
+	}
 
-	static BundleContext getContext() {
-		return context;
+	@Override
+	public String[] getSourcePaths(IResource resource) {
+		return new String[0];
+	}
+
+	@Override
+	public String[] getClassPaths(IResource resource) {
+		return new String[0];
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
+	 * @see net.ossindex.eclipse.common.IJavaUtils#isAvailable()
 	 */
-	public void start(BundleContext bundleContext) throws Exception {
-		Activator.context = bundleContext;
+	@Override
+	public boolean isAvailable() {
+		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
-	 */
-	public void stop(BundleContext bundleContext) throws Exception {
-		Activator.context = null;
+	@Override
+	public Object getResource(Object resource) {
+		return resource;
 	}
 
 }

@@ -26,9 +26,8 @@
  */
 package net.ossindex.eclipse.common.builder;
 
-import java.io.File;
-import java.util.LinkedList;
-import java.util.List;
+import net.ossindex.eclipse.common.IJavaUtils;
+import net.ossindex.eclipse.common.Utils;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -36,14 +35,8 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
-import org.eclipse.jdt.core.IClasspathEntry;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 
 /** Build visitor that identifies appropriate files, collects interesting
  * build information, and calls a method that will be useful for sub-classing.
@@ -60,6 +53,8 @@ public abstract class JavaBuildVisitor implements IResourceVisitor, IResourceDel
 	 * Progress monitor
 	 */
 	private SubMonitor progress;
+	
+	private IJavaUtils utils = Utils.getJavaUtils();
 
 	public JavaBuildVisitor(IProgressMonitor monitor)
 	{
@@ -156,32 +151,7 @@ public abstract class JavaBuildVisitor implements IResourceVisitor, IResourceDel
 	 */
 	protected String[] getSourcePaths(IResource resource)
 	{
-		IJavaProject javaProject = JavaCore.create(resource.getProject());
-		List<String> results = new LinkedList<String>();
-		try
-		{
-			if(javaProject.exists())
-			{
-				IPackageFragmentRoot[] roots = javaProject.getAllPackageFragmentRoots();
-				if(roots != null)
-				{
-					for (IPackageFragmentRoot root : roots)
-					{
-						if(root.getKind() == IPackageFragmentRoot.K_SOURCE)
-						{
-							File file = root.getPath().toFile();
-							results.add(file.getAbsolutePath());
-						}
-					}
-				}
-			}
-		}
-		catch (JavaModelException e)
-		{
-			e.printStackTrace();
-		}
-
-		return results.toArray(new String[results.size()]);
+		return utils.getSourcePaths(resource);
 	}
 
 	/** Get the class paths for the project
@@ -190,37 +160,7 @@ public abstract class JavaBuildVisitor implements IResourceVisitor, IResourceDel
 	 */
 	protected String[] getClassPaths(IResource resource)
 	{
-		IJavaProject javaProject = JavaCore.create(resource.getProject());
-		List<String> results = new LinkedList<String>();
-		try
-		{
-			if(javaProject.exists())
-			{
-				IClasspathEntry[] classpathEntries = javaProject.getRawClasspath();
-				if(classpathEntries != null)
-				{
-					for (IClasspathEntry entry : classpathEntries)
-					{
-						// This technically works for finding source paths, but it
-						// also gets a few other strange package type definitions
-						// so to avoid confusion I use the above solution instead.
-						//					IPath sourcePath = entry.getPath();
-						//					sourcePaths.add(sourcePath);
-						IPath classPath = entry.getOutputLocation();
-						if(classPath != null)
-						{
-							File file = classPath.toFile();
-							results.add(file.getAbsolutePath());
-						}
-					}
-				}
-			}
-		}
-		catch (JavaModelException e)
-		{
-			e.printStackTrace();
-		}
-		return results.toArray(new String[results.size()]);
+		return utils.getClassPaths(resource);
 	}
 
 	/** Override the task name for the progress monitor
