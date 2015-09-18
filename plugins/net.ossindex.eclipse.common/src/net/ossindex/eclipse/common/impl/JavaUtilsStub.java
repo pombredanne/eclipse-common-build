@@ -85,6 +85,12 @@ public class JavaUtilsStub implements IJavaUtils
 		return new String[0];
 	}
 
+	@Override
+	public String[] getTargetPaths(IResource resource) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * @see net.ossindex.eclipse.common.IJavaUtils#isAvailable()
@@ -98,5 +104,6 @@ public class JavaUtilsStub implements IJavaUtils
 	public Object getResource(Object resource) {
 		return resource;
 	}
+
 
 }

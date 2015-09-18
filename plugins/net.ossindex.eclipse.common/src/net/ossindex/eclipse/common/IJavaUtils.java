@@ -71,6 +71,13 @@ public interface IJavaUtils
 	 */
 	public String[] getClassPaths(IResource resource);
 
+	/** Get the target directory for compiled classes
+	 * 
+	 * @param resource
+	 * @return
+	 */
+	public String[] getTargetPaths(IResource resource);
+
 	/** Returns true if the java utilities are available
 	 * 
 	 * @return
@@ -83,4 +90,5 @@ public interface IJavaUtils
 	 * @return
 	 */
 	public Object getResource(Object resource);
+
 }

@@ -162,6 +162,16 @@ public abstract class JavaBuildVisitor implements IResourceVisitor, IResourceDel
 	{
 		return utils.getClassPaths(resource);
 	}
+	
+	/**
+	 * 
+	 * @param resource
+	 * @return
+	 */
+	protected String[] getTargetPaths(IResource resource)
+	{
+		return utils.getTargetPaths(resource);
+	}
 
 	/** Override the task name for the progress monitor
 	 * 

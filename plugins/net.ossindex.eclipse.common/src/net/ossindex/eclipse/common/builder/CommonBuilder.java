@@ -77,8 +77,21 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	{
 		try
 		{
+			System.err.println("BEGIN BUILD");
 			IResourceVisitor visitor = getBuildVisitor(monitor);
-			if(visitor != null) getProject().accept(visitor);
+			if(visitor instanceof IBatchBuilder)
+			{
+				((IBatchBuilder)visitor).buildAll(getProject());
+			}
+			else
+			{
+				if(visitor != null) getProject().accept(visitor);
+				if(visitor instanceof IDelayedBuild)
+				{
+					((IDelayedBuild)visitor).finish();
+				}
+			}
+			System.err.println("END BUILD");
 		}
 		catch (CoreException e)
 		{
