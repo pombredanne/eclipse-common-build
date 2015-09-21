@@ -60,6 +60,12 @@ public interface IJavaUtils
 
 	/**
 	 * 
+	 * @return
+	 */
+	List<IPath> getTargetPaths();
+	
+	/**
+	 * 
 	 * @param resource
 	 * @return
 	 */

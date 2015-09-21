@@ -44,6 +44,7 @@ public class JavaUtilsStub implements IJavaUtils
 {
 	private List<IPath> sourcePaths = new LinkedList<IPath>();
 	private List<IPath> classPaths = new LinkedList<IPath>();
+	private List<IPath> targetPaths = new LinkedList<IPath>();
 	
 	public JavaUtilsStub()
 	{
@@ -75,6 +76,16 @@ public class JavaUtilsStub implements IJavaUtils
 		return classPaths;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see net.ossindex.eclipse.common.IJavaUtils#getTargetPaths()
+	 */
+	@Override
+	public List<IPath> getTargetPaths()
+	{
+		return targetPaths;
+	}
+
 	@Override
 	public String[] getSourcePaths(IResource resource) {
 		return new String[0];
@@ -104,6 +115,7 @@ public class JavaUtilsStub implements IJavaUtils
 	public Object getResource(Object resource) {
 		return resource;
 	}
+
 
 
 }

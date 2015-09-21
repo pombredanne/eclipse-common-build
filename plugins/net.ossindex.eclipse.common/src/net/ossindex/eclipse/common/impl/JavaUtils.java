@@ -27,11 +27,14 @@
 package net.ossindex.eclipse.common.impl;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import net.ossindex.eclipse.common.IJavaUtils;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -51,6 +54,7 @@ public class JavaUtils implements IJavaUtils
 {
 	private List<IPath> sourcePaths = new LinkedList<IPath>();
 	private List<IPath> classPaths = new LinkedList<IPath>();
+	private List<IPath> targetPaths = new LinkedList<IPath>();
 	
 	public JavaUtils()
 	{
@@ -78,6 +82,7 @@ public class JavaUtils implements IJavaUtils
 		{
 			if(javaProject.exists())
 			{
+				// Get source information specifically
 				IPackageFragmentRoot[] roots = javaProject.getAllPackageFragmentRoots();
 				if(roots != null)
 				{
@@ -118,6 +123,18 @@ public class JavaUtils implements IJavaUtils
 	{
 		try
 		{
+			// Prime with the java project output location
+			IPath outputLocation = javaProject.getOutputLocation();
+			if(outputLocation != null)
+			{
+				if(!targetPaths.contains(outputLocation))
+				{
+					targetPaths.add(outputLocation);
+				}
+			}
+			
+			
+			// Now look for extra configured classpaths
 			if(javaProject.exists())
 			{
 				IClasspathEntry[] classpathEntries = javaProject.getRawClasspath();
@@ -134,6 +151,10 @@ public class JavaUtils implements IJavaUtils
 						if(classPath != null)
 						{
 							classPaths.add(classPath);
+							if(!targetPaths.contains(classPath))
+							{
+								targetPaths.add(classPath);
+							}
 						}
 					}
 				}
@@ -163,6 +184,11 @@ public class JavaUtils implements IJavaUtils
 		return classPaths;
 	}
 	
+	@Override
+	public List<IPath> getTargetPaths() {
+		return targetPaths;
+	}
+
 
 	/** Get the paths to source directories.
 	 * 
@@ -222,11 +248,14 @@ public class JavaUtils implements IJavaUtils
 						// so to avoid confusion I use the above solution instead.
 						//					IPath sourcePath = entry.getPath();
 						//					sourcePaths.add(sourcePath);
-						IPath classPath = entry.getOutputLocation();
-						if(classPath != null)
+						if(entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY)
 						{
-							IFolder ifile = project.getWorkspace().getRoot().getFolder(classPath);
-							results.add(ifile.getLocation().toString());
+							IPath classPath = entry.getOutputLocation();
+							if(classPath != null)
+							{
+								IFile ifile = project.getWorkspace().getRoot().getFile(classPath);
+								results.add(ifile.getLocation().toString());
+							}
 						}
 					}
 				}
@@ -253,22 +282,41 @@ public class JavaUtils implements IJavaUtils
 		{
 			if(javaProject.exists())
 			{
+				Set<IResource> paths = new HashSet<IResource>();
+				
+				// Prime with the java project output location
+				IPath outputLocation = javaProject.getOutputLocation();
+				if(outputLocation != null)
+				{
+					IFolder ifile = project.getWorkspace().getRoot().getFolder(outputLocation);
+					if(!paths.contains(ifile))
+					{
+						results.add(ifile.getLocation().toString());
+						paths.add(ifile);
+					}
+				}
+				
+				// Now look for extra configured classpaths
 				IClasspathEntry[] classpathEntries = javaProject.getRawClasspath();
 				if(classpathEntries != null)
 				{
 					for (IClasspathEntry entry : classpathEntries)
 					{
-						// This technically works for finding source paths, but it
-						// also gets a few other strange package type definitions
-						// so to avoid confusion I use the above solution instead.
-						//					IPath sourcePath = entry.getPath();
-						//					sourcePaths.add(sourcePath);
-						IPath classPath = entry.getOutputLocation();
-						if(classPath != null)
+						// This first case works for "standard" Eclipse projects
+						if(entry.getContentKind() == IPackageFragmentRoot.K_SOURCE)
 						{
-							IFolder ifile = project.getWorkspace().getRoot().getFolder(classPath);
-							results.add(ifile.getLocation().toString());
+							IPath classPath = entry.getOutputLocation();
+							if(classPath != null)
+							{
+								IFolder ifile = project.getWorkspace().getRoot().getFolder(classPath);
+								if(!paths.contains(ifile))
+								{
+									results.add(ifile.getLocation().toString());
+									paths.add(ifile);
+								}
+							}
 						}
+
 					}
 				}
 			}

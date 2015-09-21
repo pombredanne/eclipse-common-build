@@ -43,6 +43,11 @@ import org.eclipse.core.runtime.IProgressMonitor;
  */
 public abstract class CommonBuilder extends IncrementalProjectBuilder
 {
+	/**
+	 * For debug purposes only
+	 */
+	private static final boolean IGNORE_BATCH = false;
+	
 	public CommonBuilder()
 	{
 	}
@@ -73,13 +78,14 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	 * 
 	 * @param monitor
 	 */
+	@SuppressWarnings("unused")
 	private void fullBuild(IProgressMonitor monitor)
 	{
 		try
 		{
 			System.err.println("BEGIN BUILD");
 			IResourceVisitor visitor = getBuildVisitor(monitor);
-			if(visitor instanceof IBatchBuilder)
+			if(!IGNORE_BATCH && (visitor instanceof IBatchBuilder))
 			{
 				((IBatchBuilder)visitor).buildAll(getProject());
 			}
