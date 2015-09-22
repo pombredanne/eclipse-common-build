@@ -188,14 +188,11 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 
 	/** Number of individual files we are willing to build before forcing a full build.
 	 * 
-	 * Bear in mind for Java this number will include the changed class files as well,
-	 * so make the number large enough to make a difference.
-	 * 
 	 * @return
 	 */
 	protected int getFullBuildThreshold()
 	{
-		return 4;
+		return 10;
 	}
 
 	/** Build a list of files
