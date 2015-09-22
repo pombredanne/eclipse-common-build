@@ -332,7 +332,7 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 		Job job = new ConcurrentBuildManagerJob(manager);
 		// Start the Job
 		//job.setUser(true);
-		job.setPriority(Job.LONG);
+		job.setPriority(Job.BUILD);
 		job.schedule();
 
 		// Blocking mode

@@ -85,6 +85,7 @@ public class ConcurrentBuildManagerJob extends Job
 				e.printStackTrace();
 			}
 			progress.worked(1);
+			yieldRule(progress);
 		}
 		
 		try
