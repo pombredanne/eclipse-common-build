@@ -33,7 +33,9 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.QualifiedName;
+import org.eclipse.core.runtime.SubMonitor;
 
 /** Common code for the build visitors.
  * 
@@ -112,7 +114,7 @@ public abstract class CommonBuildVisitor implements IResourceVisitor, IResourceD
 	{
 		if(resource instanceof IFile)
 		{
-			if(accepts((IFile)resource))
+			if(acceptsSource((IFile)resource))
 			{
 				try
 				{
@@ -155,7 +157,7 @@ public abstract class CommonBuildVisitor implements IResourceVisitor, IResourceD
 	{
 		if(resource instanceof IFile)
 		{
-			if(accepts((IFile)resource))
+			if(acceptsSource((IFile)resource))
 			{
 				if(isDirty((IFile)resource))
 				{
@@ -186,14 +188,24 @@ public abstract class CommonBuildVisitor implements IResourceVisitor, IResourceD
 		return false;
 	}
 
-	/** Indicate whether or not this file would be built by this builder. This
-	 * is used internally when marking files as being built after a batch build
-	 * (when we don't know exactly which files were technically built). 
+	/** Indicates whether the provided file is the type of file that will
+	 * be built by the builder.
 	 * 
 	 * @param resource
 	 * @return
 	 */
 	protected abstract boolean accepts(IFile resource);
+
+	/** Similar to accepts, but is intended specifically ask about the source
+	 * files, as opposed to possibly build artifacts.
+	 * 
+	 * @param resource
+	 * @return
+	 */
+	protected boolean acceptsSource(IFile resource)
+	{
+		return accepts(resource);
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -205,4 +217,11 @@ public abstract class CommonBuildVisitor implements IResourceVisitor, IResourceD
 		IResource resource = delta.getResource();
 		return visit(resource);
 	}
+
+	/** Used to set the progress monitor after instantiation
+	 * 
+	 * @param monitor
+	 */
+	public abstract void setProgressMonitor(IProgressMonitor monitor);
+
 }

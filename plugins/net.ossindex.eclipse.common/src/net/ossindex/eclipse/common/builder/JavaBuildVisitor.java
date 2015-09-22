@@ -78,6 +78,15 @@ public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IRe
 		utilMap = new HashMap<IProject,IJavaUtils>();
 		progress = SubMonitor.convert(monitor);
 	}
+	
+	/**
+	 * 
+	 * @param monitor
+	 */
+	public void setProgressMonitor(IProgressMonitor monitor)
+	{
+		progress = SubMonitor.convert(monitor);
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -188,8 +197,19 @@ public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IRe
 	@Override
 	protected boolean accepts(IFile resource)
 	{
+		return isClassFile(resource);
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see net.ossindex.eclipse.common.builder.CommonBuildVisitor#acceptsAsArtifact(org.eclipse.core.resources.IFile)
+	 */
+	@Override
+	protected boolean acceptsSource(IFile resource)
+	{
 		return isJavaFile(resource);
 	}
+
 
 	/** Get the paths to source directories.
 	 * 

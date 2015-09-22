@@ -54,20 +54,6 @@ import org.eclipse.core.runtime.IPath;
  */
 public class CUtils extends CommonUtils implements ICUtils
 {
-
-	@SuppressWarnings("unused")
-	private IProject project;
-
-	/*
-	 * (non-Javadoc)
-	 * @see net.ossindex.eclipse.common.ICUtils#setProject(org.eclipse.core.resources.IProject)
-	 */
-	@Override
-	public void setProject(IProject project)
-	{
-		this.project = project;
-	}
-
 	/** Return true if this is a C/C++ compilation unit
 	 * 
 	 * @param resource

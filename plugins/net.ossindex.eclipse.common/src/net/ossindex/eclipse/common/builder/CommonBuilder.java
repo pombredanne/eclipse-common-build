@@ -26,15 +26,20 @@
  */
 package net.ossindex.eclipse.common.builder;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 
 /** 
  * 
@@ -126,13 +131,97 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	{
 		try
 		{
-			IResourceDeltaVisitor visitor = getDeltaVisitor(monitor);
-			if(visitor != null) delta.accept(visitor);
+			final CommonBuildVisitor visitor = (CommonBuildVisitor)getDeltaVisitor(null);
+
+			// Get a full list of changed files. We want to do this instead of the
+			// visitor so we know exactly how many files there are. This will be
+			// used to provide better progress monitoring, but more importantly
+			// it will allow us to decide whether to do batch processing
+			// or not.
+			final List<IFile> changed = new LinkedList<IFile>();
+			IResourceDeltaVisitor deltaVisitor = new IResourceDeltaVisitor()
+			{
+				public boolean visit(IResourceDelta delta)
+				{
+					//only interested in content changes and added files
+					if ((delta.getFlags() & IResourceDelta.CONTENT) == 0 &&
+							(delta.getKind() & IResourceDelta.ADDED) == 0) return true;
+
+					IResource resource = delta.getResource();
+					//only interested in files with the "txt" extension
+					if (resource instanceof IFile)
+					{
+						if(visitor.accepts((IFile)resource))
+						{
+							changed.add((IFile)resource);
+						}
+					}
+					return true;
+				}
+			};
+
+			delta.accept(deltaVisitor);
+
+			if(changed.size() > 0)
+			{
+				if(!IGNORE_BATCH && (visitor instanceof IBatchBuilder))
+				{
+					if(changed.size() > getFullBuildThreshold())
+					{
+						visitor.setProgressMonitor(monitor);
+						((IBatchBuilder)visitor).buildAll(getProject());
+						((IBatchBuilder)visitor).markAllBuilt(getProject());
+						return;
+					}
+				}
+
+				// If we get here, then perform individual builds
+				buildFiles(changed, monitor);
+			}
 		}
 		catch (CoreException e)
 		{
 			System.err.println("Exception performing incremental build");
 			e.printStackTrace();
+		}
+	}
+
+	/** Number of individual files we are willing to build before forcing a full build.
+	 * 
+	 * Bear in mind for Java this number will include the changed class files as well,
+	 * so make the number large enough to make a difference.
+	 * 
+	 * @return
+	 */
+	protected int getFullBuildThreshold()
+	{
+		return 4;
+	}
+
+	/** Build a list of files
+	 * 
+	 * @param changed
+	 * @param monitor
+	 */
+	private void buildFiles(List<IFile> changed, IProgressMonitor monitor)
+	{
+		SubMonitor progress = SubMonitor.convert(monitor);
+		progress.setWorkRemaining(changed.size());
+
+		IResourceVisitor visitor = getBuildVisitor(null);
+
+		for (IFile file : changed)
+		{
+			progress.setTaskName("Processing " + file.getName());
+			try
+			{
+				visitor.visit(file);
+			}
+			catch (CoreException e)
+			{
+				e.printStackTrace();
+			}
+			progress.worked(1);
 		}
 	}
 

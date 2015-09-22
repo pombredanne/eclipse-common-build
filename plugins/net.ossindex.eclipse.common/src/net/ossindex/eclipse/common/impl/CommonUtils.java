@@ -45,6 +45,18 @@ import org.eclipse.core.runtime.jobs.Job;
  */
 public abstract class CommonUtils
 {
+	protected IProject project;
+
+	/*
+	 * (non-Javadoc)
+	 * @see net.ossindex.eclipse.common.ICUtils#setProject(org.eclipse.core.resources.IProject)
+	 */
+	public void setProject(IProject project)
+	{
+		this.project = project;
+	}
+
+
 	/** Given a builder ID, clear all the timestamps
 	 * 
 	 * @param builderId
@@ -62,7 +74,12 @@ public abstract class CommonUtils
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 
-				IProject[] projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+				IProject[] projects = null;
+				
+				// This may be run on one project, or all
+				if(project != null) projects = new IProject[] {project};
+				else projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+				
 				for (IProject project : projects)
 				{
 					if(project.isOpen())

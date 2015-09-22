@@ -59,6 +59,15 @@ public abstract class CBuildVisitor extends CommonBuildVisitor implements IResou
 		super(builderId);
 		progress = SubMonitor.convert(monitor);
 	}
+	
+	/**
+	 * 
+	 * @param monitor
+	 */
+	public void setProgressMonitor(IProgressMonitor monitor)
+	{
+		progress = SubMonitor.convert(monitor);
+	}
 
 	/*
 	 * (non-Javadoc)

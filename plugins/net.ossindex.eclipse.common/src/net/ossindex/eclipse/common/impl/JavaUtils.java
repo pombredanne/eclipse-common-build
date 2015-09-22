@@ -52,7 +52,6 @@ import org.eclipse.jdt.core.JavaModelException;
  */
 public class JavaUtils extends CommonUtils implements IJavaUtils
 {
-	private IProject project;
 	private List<IPath> sourcePaths = new LinkedList<IPath>();
 	private List<IPath> classPaths = new LinkedList<IPath>();
 	private List<IPath> targetPaths = new LinkedList<IPath>();
@@ -67,7 +66,7 @@ public class JavaUtils extends CommonUtils implements IJavaUtils
 	 */
 	public void setProject(IProject project)
 	{
-		this.project = project;
+		super.setProject(project);
 		IJavaProject javaProject = JavaCore.create(project);
 		if(javaProject.exists())
 		{
