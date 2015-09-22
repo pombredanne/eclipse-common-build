@@ -42,6 +42,7 @@ import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.core.runtime.jobs.Job;
 
 /** 
  * 
@@ -230,9 +231,9 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 				}
 				return true;
 			}
-			
+
 		};
-		
+
 		project.accept(deltaVisitor);
 		return changed;
 	}
@@ -262,7 +263,7 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 		{
 			buildSequential(visitor, changed, monitor);
 		}
-		
+
 		// Tell the visitor that the project is complete. This allows it
 		// to perform post-build actions. This happens for DelayedBuilds
 		// and ConcurrentBuilds.
@@ -311,7 +312,7 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 		progress.setWorkRemaining(changed.size());
 
 		ConcurrentBuildManager manager = new ConcurrentBuildManager(visitor);
-		
+
 		for (IFile file : changed)
 		{
 			progress.setTaskName("Processing " + file.getName());
@@ -325,17 +326,26 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 			}
 			progress.worked(1);
 		}
-		
-		// Wait for all jobs to complete
-		try
-		{
-			progress.setTaskName("Finalizing concurrent build");
-			manager.shutdown();
-		}
-		catch (InterruptedException | ExecutionException e)
-		{
-			e.printStackTrace();
-		}
+
+		// Non-blocking mode
+		// Make a job to monitor the concurrent build process
+		Job job = new ConcurrentBuildManagerJob(manager);
+		// Start the Job
+		//job.setUser(true);
+		job.setPriority(Job.LONG);
+		job.schedule();
+
+		// Blocking mode
+		//		// Wait for all jobs to complete
+		//		try
+		//		{
+		//			progress.setTaskName("Finalizing concurrent build");
+		//			manager.shutdown();
+		//		}
+		//		catch (InterruptedException | ExecutionException e)
+		//		{
+		//			e.printStackTrace();
+		//		}
 	}
 
 	protected abstract IResourceDeltaVisitor getDeltaVisitor(IProgressMonitor monitor);

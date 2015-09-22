@@ -26,6 +26,7 @@
  */
 package net.ossindex.eclipse.common.builder;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -44,16 +45,16 @@ import org.eclipse.core.runtime.CoreException;
  *   1. Blocking: This blocks the build process until completion
  *   2. Non-blocking: Runs these builders as a separate non-blocking job
  * 
- *   (*) eventually. Currently only blocking is supported.
+ *   (*) eventually. Currently only non-blocking is supported.
  * 
  * @author Ken Duck
  *
  */
-public class ConcurrentBuildManager
+public class ConcurrentBuildManager implements Iterable<Future<ConcurrentBuildJob>>
 {
-	//private int maxJobs = Runtime.getRuntime().availableProcessors() * 2;
+//	private int maxJobs = Runtime.getRuntime().availableProcessors() * 2;
 	private int maxJobs = 2;
-	
+
 	private IResourceVisitor visitor;
 	private ExecutorService executor;
 
@@ -61,12 +62,19 @@ public class ConcurrentBuildManager
 	 * Current set of jobs to execute
 	 */
 	private List<Future<ConcurrentBuildJob>> jobs;
+	private List<String> names;
+
+	/**
+	 * True while the executor has not been shut down
+	 */
+	private boolean isRunning = true;
 
 	public ConcurrentBuildManager(IResourceVisitor visitor)
 	{
 		this.visitor = visitor;
 		executor = Executors.newFixedThreadPool(maxJobs);
 		jobs = new LinkedList<Future<ConcurrentBuildJob>>();
+		names = new LinkedList<String>();
 	}
 
 	/** Request a new file be visited. This may block depending on the status of
@@ -80,26 +88,78 @@ public class ConcurrentBuildManager
 		Callable<ConcurrentBuildJob> worker = new ConcurrentBuildJob(visitor, file);
 		Future<ConcurrentBuildJob> job = executor.submit(worker);
 		jobs.add(job);
+		names.add(file.getName());
 	}
-	
+
 	/**
-	 * Shut down the manager. Wait for all jobs to complete.
-	 * @throws ExecutionException 
-	 * @throws InterruptedException 
+	 * 
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
+	public void runall() throws InterruptedException, ExecutionException
+	{
+		for(Future<ConcurrentBuildJob> future: jobs)
+		{
+			@SuppressWarnings("unused")
+			ConcurrentBuildJob job = future.get();
+		}
+	}
+
+	/**
+	 * 
+	 * @throws InterruptedException
+	 * @throws ExecutionException
 	 */
 	public void shutdown() throws InterruptedException, ExecutionException
 	{
-		try
+		if(isRunning)
 		{
-			for(Future<ConcurrentBuildJob> future: jobs)
-			{
-				@SuppressWarnings("unused")
-				ConcurrentBuildJob job = future.get();
-			}
-		}
-		finally
-		{
+			isRunning = false;
 			executor.shutdown();
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Iterable#iterator()
+	 */
+	@Override
+	public Iterator<Future<ConcurrentBuildJob>> iterator()
+	{
+		return jobs.iterator();
+	}
+
+	/** Get the number of jobs
+	 * 
+	 * @return
+	 */
+	public int getSize()
+	{
+		return jobs.size();
+	}
+
+	/** Get the name for the specified job index
+	 * 
+	 * @param index
+	 * @return
+	 */
+	public String getName(int index)
+	{
+		if(index < names.size()) return names.get(index);
+		return "";
+	}
+
+	public void shutdownNow()
+	{
+		if(isRunning)
+		{
+			isRunning = false;
+			executor.shutdownNow();
+		}
+	}
+
+	public boolean isRunning()
+	{
+		return isRunning;
 	}
 }

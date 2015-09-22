@@ -95,10 +95,14 @@ public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IRe
 	@Override
 	public boolean visit(IResource resource) throws CoreException
 	{
-		IProject project = resource.getProject();
-		if(!utilMap.containsKey(project)) utilMap.put(project, Utils.getJavaUtils(project));
-		IJavaUtils utils = utilMap.get(project);
-
+		IJavaUtils utils = null;
+		synchronized(this)
+		{
+			IProject project = resource.getProject();
+			if(!utilMap.containsKey(project)) utilMap.put(project, Utils.getJavaUtils(project));
+			utils = utilMap.get(project);
+		}
+		
 		// Handle cancellation
 		if(progress.isCanceled()) return false;
 

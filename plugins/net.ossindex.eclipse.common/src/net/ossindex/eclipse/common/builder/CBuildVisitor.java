@@ -81,8 +81,6 @@ public abstract class CBuildVisitor extends CommonBuildVisitor implements IResou
 
 		if(cutils.isCppCompilationUnit(resource))
 		{
-			//			System.out.println("  C VISIT: " + resource);
-
 			if(isDirty((IFile)resource))
 			{
 				// Regardless of the amount of progress reported so far,
