@@ -29,8 +29,10 @@ package net.ossindex.eclipse.common.builder;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
@@ -87,11 +89,13 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	{
 		try
 		{
-			IResourceVisitor visitor = getBuildVisitor(monitor);
+			CommonBuildVisitor visitor = (CommonBuildVisitor)getBuildVisitor(null);
 			if(!IGNORE_BATCH && (visitor instanceof IBatchBuildVisitor))
 			{
 				if(((IBatchBuildVisitor)visitor).areFilesDirty(getProject()))
 				{
+					visitor.setProgressMonitor(monitor);
+
 					((IBatchBuildVisitor)visitor).buildAll(getProject());
 					((IBatchBuildVisitor)visitor).markAllBuilt(getProject());
 				}
@@ -100,11 +104,8 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 			{
 				if(visitor != null)
 				{
-					getProject().accept(visitor);
-				}
-				if(visitor instanceof IDelayedBuild)
-				{
-					((IDelayedBuild)visitor).finish();
+					List<IFile> changed = getFilesToBuild(getProject(), visitor);
+					buildFiles(changed, monitor);
 				}
 			}
 		}
@@ -140,29 +141,7 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 				// used to provide better progress monitoring, but more importantly
 				// it will allow us to decide whether to do batch processing
 				// or not.
-				final List<IFile> changed = new LinkedList<IFile>();
-				IResourceDeltaVisitor deltaVisitor = new IResourceDeltaVisitor()
-				{
-					public boolean visit(IResourceDelta delta)
-					{
-						//only interested in content changes and added files
-						if ((delta.getFlags() & IResourceDelta.CONTENT) == 0 &&
-								(delta.getKind() & IResourceDelta.ADDED) == 0) return true;
-
-						IResource resource = delta.getResource();
-						//only interested in files with the "txt" extension
-						if (resource instanceof IFile)
-						{
-							if(visitor.accepts((IFile)resource))
-							{
-								changed.add((IFile)resource);
-							}
-						}
-						return true;
-					}
-				};
-
-				delta.accept(deltaVisitor);
+				final List<IFile> changed = getChangedFiles(delta, visitor);
 
 				if(changed.size() > 0)
 				{
@@ -189,6 +168,75 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 		}
 	}
 
+	/** Given a delta, get a list of all changed files
+	 * 
+	 * @param delta
+	 * @param visitor
+	 * @return
+	 * @throws CoreException
+	 */
+	private List<IFile> getChangedFiles(IResourceDelta delta, final CommonBuildVisitor visitor) throws CoreException
+	{
+		final List<IFile> changed = new LinkedList<IFile>();
+		IResourceDeltaVisitor deltaVisitor = new IResourceDeltaVisitor()
+		{
+			public boolean visit(IResourceDelta delta)
+			{
+				//only interested in content changes and added files
+				if ((delta.getFlags() & IResourceDelta.CONTENT) == 0 &&
+						(delta.getKind() & IResourceDelta.ADDED) == 0) return true;
+
+				IResource resource = delta.getResource();
+				if (resource instanceof IFile)
+				{
+					if(visitor.accepts((IFile)resource))
+					{
+						changed.add((IFile)resource);
+					}
+				}
+				return true;
+			}
+		};
+
+		delta.accept(deltaVisitor);
+		return changed;
+	}
+
+	/** Find all files in the project that we are interested in building.
+	 * 
+	 * @param project
+	 * @return
+	 * @throws CoreException 
+	 */
+	private List<IFile> getFilesToBuild(IProject project, final CommonBuildVisitor visitor) throws CoreException
+	{
+		final List<IFile> changed = new LinkedList<IFile>();
+
+		IResourceVisitor deltaVisitor = new IResourceVisitor ()
+		{
+			/*
+			 * (non-Javadoc)
+			 * @see org.eclipse.core.resources.IResourceVisitor#visit(org.eclipse.core.resources.IResource)
+			 */
+			@Override
+			public boolean visit(IResource resource) throws CoreException
+			{
+				if (resource instanceof IFile)
+				{
+					if(visitor.accepts((IFile)resource))
+					{
+						changed.add((IFile)resource);
+					}
+				}
+				return true;
+			}
+			
+		};
+		
+		project.accept(deltaVisitor);
+		return changed;
+	}
+
 	/** Number of individual files we are willing to build before forcing a full build.
 	 * 
 	 * @return
@@ -205,10 +253,35 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	 */
 	private void buildFiles(List<IFile> changed, IProgressMonitor monitor)
 	{
+		IResourceVisitor visitor = getBuildVisitor(null);
+		if(visitor instanceof IConcurrentBuildVisitor)
+		{
+			buildConcurrent(visitor, changed, monitor);
+		}
+		else
+		{
+			buildSequential(visitor, changed, monitor);
+		}
+		
+		// Tell the visitor that the project is complete. This allows it
+		// to perform post-build actions. This happens for DelayedBuilds
+		// and ConcurrentBuilds.
+		if(visitor instanceof IDelayedBuild)
+		{
+			((IDelayedBuild)visitor).finish(getProject());
+		}
+	}
+
+	/** Build each file sequentially
+	 * 
+	 * @param visitor
+	 * @param changed
+	 * @param monitor
+	 */
+	private void buildSequential(IResourceVisitor visitor, List<IFile> changed, IProgressMonitor monitor)
+	{
 		SubMonitor progress = SubMonitor.convert(monitor);
 		progress.setWorkRemaining(changed.size());
-
-		IResourceVisitor visitor = getBuildVisitor(null);
 
 		for (IFile file : changed)
 		{
@@ -222,6 +295,46 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 				e.printStackTrace();
 			}
 			progress.worked(1);
+		}
+	}
+
+	/** Build concurrently. This involves having a thread pool which we spool the
+	 * various "visits" to. We need to wait at the end for all threads to exit.
+	 * 
+	 * @param visitor
+	 * @param changed
+	 * @param monitor
+	 */
+	private void buildConcurrent(IResourceVisitor visitor, List<IFile> changed, IProgressMonitor monitor)
+	{
+		SubMonitor progress = SubMonitor.convert(monitor);
+		progress.setWorkRemaining(changed.size());
+
+		ConcurrentBuildManager manager = new ConcurrentBuildManager(visitor);
+		
+		for (IFile file : changed)
+		{
+			progress.setTaskName("Processing " + file.getName());
+			try
+			{
+				manager.visit(file);
+			}
+			catch (CoreException e)
+			{
+				e.printStackTrace();
+			}
+			progress.worked(1);
+		}
+		
+		// Wait for all jobs to complete
+		try
+		{
+			progress.setTaskName("Finalizing concurrent build");
+			manager.shutdown();
+		}
+		catch (InterruptedException | ExecutionException e)
+		{
+			e.printStackTrace();
 		}
 	}
 

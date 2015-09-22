@@ -26,12 +26,37 @@
  */
 package net.ossindex.eclipse.common.builder;
 
+import java.util.concurrent.Callable;
 
-/** Implemented by build visitors that can be run concurrently (thread safe).
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResourceVisitor;
+
+/** A job that performs a build step concurrently
  * 
  * @author Ken Duck
  *
  */
-public interface IConcurrentBuildVisitor extends IDelayedBuild
+public class ConcurrentBuildJob implements Callable<ConcurrentBuildJob>
 {
+
+	private IResourceVisitor visitor;
+	private IFile file;
+
+	public ConcurrentBuildJob(IResourceVisitor visitor, IFile file)
+	{
+		this.visitor = visitor;
+		this.file = file;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.util.concurrent.Callable#call()
+	 */
+	@Override
+	public ConcurrentBuildJob call() throws Exception
+	{
+		visitor.visit(file);
+		return this;
+	}
+
 }

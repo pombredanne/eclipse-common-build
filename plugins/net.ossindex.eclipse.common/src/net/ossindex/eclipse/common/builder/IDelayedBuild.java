@@ -26,6 +26,8 @@
  */
 package net.ossindex.eclipse.common.builder;
 
+import org.eclipse.core.resources.IProject;
+
 /**
  * 
  * @author Ken Duck
@@ -34,9 +36,10 @@ package net.ossindex.eclipse.common.builder;
 public interface IDelayedBuild
 {
 
-	/**
-	 * Invoke the completion of a delayed build
+	/** Called when a build is complete on a particular project
+	 * 
+	 * @param project 
 	 */
-	void finish();
+	void finish(IProject iProject);
 
 }
