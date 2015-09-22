@@ -28,6 +28,7 @@ package net.ossindex.eclipse.common;
 
 import java.util.List;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
@@ -96,5 +97,12 @@ public interface IJavaUtils
 	 * @return
 	 */
 	public Object getResource(Object resource);
+
+	/** Given a class file, identify the source file that it corresponds to.
+	 * 
+	 * @param resource
+	 * @return
+	 */
+	public IFile getSourceFile(IFile classFile);
 
 }

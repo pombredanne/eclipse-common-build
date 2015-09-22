@@ -78,7 +78,7 @@ public abstract class CBuildVisitor extends CommonBuildVisitor implements IResou
 				// use 2% of the space remaining in the monitor to process the next node.
 				progress.setWorkRemaining(50);
 				build(resource);
-				markBuilt(resource);
+				markBuilt((IFile)resource);
 				progress.worked(1);
 			}
 		}
@@ -110,5 +110,15 @@ public abstract class CBuildVisitor extends CommonBuildVisitor implements IResou
 	protected void setTaskName(String name)
 	{
 		progress.setTaskName(name);
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see net.ossindex.eclipse.common.builder.CommonBuildVisitor#accepts(org.eclipse.core.resources.IFile)
+	 */
+	@Override
+	protected boolean accepts(IFile resource)
+	{
+		return cutils.isCppCompilationUnit(resource);
 	}
 }

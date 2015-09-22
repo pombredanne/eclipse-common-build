@@ -31,6 +31,7 @@ import java.util.List;
 
 import net.ossindex.eclipse.common.IJavaUtils;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
@@ -111,9 +112,22 @@ public class JavaUtilsStub implements IJavaUtils
 		return false;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see net.ossindex.eclipse.common.IJavaUtils#getResource(java.lang.Object)
+	 */
 	@Override
 	public Object getResource(Object resource) {
 		return resource;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see net.ossindex.eclipse.common.IJavaUtils#getSourceFile(org.eclipse.core.resources.IFile)
+	 */
+	@Override
+	public IFile getSourceFile(IFile classFile) {
+		return classFile;
 	}
 
 

@@ -47,7 +47,7 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	 * For debug purposes only
 	 */
 	private static final boolean IGNORE_BATCH = false;
-	
+
 	public CommonBuilder()
 	{
 	}
@@ -82,21 +82,26 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	{
 		try
 		{
-			System.err.println("BEGIN BUILD");
 			IResourceVisitor visitor = getBuildVisitor(monitor);
 			if(!IGNORE_BATCH && (visitor instanceof IBatchBuilder))
 			{
-				((IBatchBuilder)visitor).buildAll(getProject());
+				if(((IBatchBuilder)visitor).areFilesDirty(getProject()))
+				{
+					((IBatchBuilder)visitor).buildAll(getProject());
+					((IBatchBuilder)visitor).markAllBuilt(getProject());
+				}
 			}
 			else
 			{
-				if(visitor != null) getProject().accept(visitor);
+				if(visitor != null)
+				{
+					getProject().accept(visitor);
+				}
 				if(visitor instanceof IDelayedBuild)
 				{
 					((IDelayedBuild)visitor).finish();
 				}
 			}
-			System.err.println("END BUILD");
 		}
 		catch (CoreException e)
 		{

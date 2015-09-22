@@ -26,10 +26,14 @@
  */
 package net.ossindex.eclipse.common.builder;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import net.ossindex.eclipse.common.IJavaUtils;
 import net.ossindex.eclipse.common.Utils;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.IResourceVisitor;
@@ -53,11 +57,25 @@ public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IRe
 	 */
 	private SubMonitor progress;
 
+	/**
+	 * 
+	 */
 	private IJavaUtils utils = Utils.getJavaUtils();
+	
+	/**
+	 * Map for project specific utils
+	 */
+	private Map<IProject,IJavaUtils> utilMap;
 
+	/**
+	 * 
+	 * @param builderId
+	 * @param monitor
+	 */
 	public JavaBuildVisitor(String builderId, IProgressMonitor monitor)
 	{
 		super(builderId);
+		utilMap = new HashMap<IProject,IJavaUtils>();
 		progress = SubMonitor.convert(monitor);
 	}
 
@@ -68,6 +86,10 @@ public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IRe
 	@Override
 	public boolean visit(IResource resource) throws CoreException
 	{
+		IProject project = resource.getProject();
+		if(!utilMap.containsKey(project)) utilMap.put(project, Utils.getJavaUtils(project));
+		IJavaUtils utils = utilMap.get(project);
+		
 		// Handle cancellation
 		if(progress.isCanceled()) return false;
 
@@ -79,7 +101,7 @@ public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IRe
 			if(isDirty((IFile)resource))
 			{
 				buildSource(resource);
-				markBuilt(resource);
+				markBuilt((IFile)resource);
 			}
 		}
 		if(isClassFile(resource))
@@ -88,11 +110,12 @@ public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IRe
 
 			// Regardless of the amount of progress reported so far,
 			// use 2% of the space remaining in the monitor to process the next node.
-			if(isDirty((IFile)resource))
+			IFile sourceFile = utils.getSourceFile((IFile)resource);
+			if(isDirty(sourceFile))
 			{
 				progress.setWorkRemaining(50);
 				buildClass(resource);
-				markBuilt(resource);
+				markBuilt(sourceFile);
 				progress.worked(1);
 			}
 		}
@@ -140,7 +163,18 @@ public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IRe
 		}
 		return false;
 	}
-
+	
+	/** For our purposes we only care if a source file has changed. If the source
+	 * files have not changed then the class files should not have changed.
+	 * 
+	 * @see net.ossindex.eclipse.common.builder.CommonBuildVisitor#accepts(org.eclipse.core.resources.IFile)
+	 */
+	@Override
+	protected boolean accepts(IFile resource)
+	{
+		return isJavaFile(resource);
+	}
+	
 	/** Get the paths to source directories.
 	 * 
 	 * @param resource

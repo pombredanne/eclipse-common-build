@@ -26,6 +26,7 @@
  */
 package net.ossindex.eclipse.common.builder;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
@@ -55,7 +56,7 @@ public abstract class CommonBuildVisitor implements IResourceVisitor, IResourceD
 	{
 		timestampQualifier = new QualifiedName(builderId, ".TIMESTAMP");
 	}
-	
+
 	/** Only rebuild dirty resources
 	 * 
 	 * @param resource
@@ -89,7 +90,7 @@ public abstract class CommonBuildVisitor implements IResourceVisitor, IResourceD
 	 * 
 	 * @param resource
 	 */
-	protected void markBuilt(IResource resource)
+	protected void markBuilt(IFile resource)
 	{
 		try
 		{
@@ -100,7 +101,100 @@ public abstract class CommonBuildVisitor implements IResourceVisitor, IResourceD
 			e.printStackTrace();
 		}
 	}
-	
+
+	/** Recursively look through files, identifying those that can be marked.
+	 * This is generally used in conjunction with batch builds to ensure
+	 * files are appropriately marked as being built so we don't waste time.
+	 * 
+	 * @param resource
+	 */
+	public void markAllBuilt(IResource resource)
+	{
+		if(resource instanceof IFile)
+		{
+			if(accepts((IFile)resource))
+			{
+				try
+				{
+					resource.setPersistentProperty(timestampQualifier, Long.toString(System.currentTimeMillis()));
+				}
+				catch (CoreException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		}
+		else if(resource instanceof IContainer)
+		{
+			try
+			{
+				IResource[] members = ((IContainer)resource).members();
+				if(members != null)
+				{
+					for (IResource member : members)
+					{
+						markAllBuilt(member);
+					}
+				}
+			}
+			catch (CoreException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/** Recursively look through files, identifying those that can be marked.
+	 * This is generally used in conjunction with batch builds to ensure
+	 * files are appropriately marked as being built so we don't waste time.
+	 * 
+	 * @param resource
+	 */
+	public boolean areFilesDirty(IResource resource)
+	{
+		if(resource instanceof IFile)
+		{
+			if(accepts((IFile)resource))
+			{
+				if(isDirty((IFile)resource))
+				{
+					return true;
+				}
+			}
+		}
+		else if(resource instanceof IContainer)
+		{
+			try
+			{
+				IResource[] members = ((IContainer)resource).members();
+				if(members != null)
+				{
+					for (IResource member : members)
+					{
+						boolean dirty = areFilesDirty(member);
+						if(dirty) return true;
+					}
+				}
+			}
+			catch (CoreException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return false;
+	}
+
+	/** Indicate whether or not this file would be built by this builder. This
+	 * is used internally when marking files as being built after a batch build
+	 * (when we don't know exactly which files were technically built). 
+	 * 
+	 * @param resource
+	 * @return
+	 */
+	protected abstract boolean accepts(IFile resource);
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.eclipse.core.resources.IResourceDeltaVisitor#visit(org.eclipse.core.resources.IResourceDelta)

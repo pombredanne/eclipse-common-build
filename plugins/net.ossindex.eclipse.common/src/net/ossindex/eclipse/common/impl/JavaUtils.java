@@ -52,6 +52,7 @@ import org.eclipse.jdt.core.JavaModelException;
  */
 public class JavaUtils implements IJavaUtils
 {
+	private IProject project;
 	private List<IPath> sourcePaths = new LinkedList<IPath>();
 	private List<IPath> classPaths = new LinkedList<IPath>();
 	private List<IPath> targetPaths = new LinkedList<IPath>();
@@ -66,6 +67,7 @@ public class JavaUtils implements IJavaUtils
 	 */
 	public void setProject(IProject project)
 	{
+		this.project = project;
 		IJavaProject javaProject = JavaCore.create(project);
 		loadSourcePaths(javaProject);
 		loadClassPaths(javaProject);
@@ -349,6 +351,84 @@ public class JavaUtils implements IJavaUtils
     		resource = ((IJavaProject)resource).getResource();
     	}
 		return resource;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see net.ossindex.eclipse.common.IJavaUtils#getSourceFile(org.eclipse.core.resources.IFile)
+	 */
+	@Override
+	public IFile getSourceFile(IFile ifile)
+	{
+		// First find a matching source path to get the package hierarchy for the file
+		IPath filePath = ifile.getFullPath();
+		String filePathString = filePath.toString();
+		String packageString = null;
+		for(IPath classPath: targetPaths)
+		{
+			String classPathString = classPath.toString();
+			if(filePathString.startsWith(classPathString))
+			{
+				packageString = filePathString.replace(classPathString, "");
+			}
+		}
+
+		// The package string is the java class' package name followed by the
+		// class name and .class
+		if(packageString != null)
+		{
+			// Get the expected source file package path
+			String javaPath = getJavaPath(packageString);
+
+			// We want to strip the project path from the beginning of
+			// the source paths we come up with, since creating an IFile
+			// requires a project relative path.
+			String projectPath = project.getFullPath().toString();
+			int projectPathSize = projectPath.length();
+
+			// Look through the source paths trying to find one within which
+			// the expected source package path exists. If we find one it must
+			// be the one we want, unless there is a collision in which case
+			// Eclipse should be complaining bitterly.
+			for(IPath sourcePath: sourcePaths)
+			{
+				// Make sure to remove the project path from the string
+				String sourcePathString = sourcePath.toString().substring(projectPathSize);
+				IFile file = project.getFile(sourcePathString + "/" + javaPath);
+				if(file.exists())
+				{
+					return file;
+				}
+			}
+
+			System.err.println("WARNING: Could not find java file matching " + filePathString);
+		}
+		return ifile;
+	}
+
+	/** Given a "class" string, create the "*.java" string.
+	 * 
+	 * @param packageString
+	 * @return
+	 */
+	private String getJavaPath(String path)
+	{
+		// Remove the .class suffix
+		if(path.endsWith(".class"))
+		{
+			path = path.substring(0, path.length() - 6);
+		}
+
+		// Remove 'nested class' indicator
+		int index = path.lastIndexOf('$');
+		if(index > 0)
+		{
+			path = path.substring(0, index);
+		}
+
+		// Add the .java suffix
+		path = path + ".java";
+		return path;
 	}
 
 }
