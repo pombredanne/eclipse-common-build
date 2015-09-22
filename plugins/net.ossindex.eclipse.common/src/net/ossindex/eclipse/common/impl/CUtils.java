@@ -29,6 +29,8 @@ package net.ossindex.eclipse.common.impl;
 import java.util.LinkedList;
 import java.util.List;
 
+import net.ossindex.eclipse.common.ICUtils;
+
 import org.eclipse.cdt.core.model.CModelException;
 import org.eclipse.cdt.core.model.CoreModel;
 import org.eclipse.cdt.core.model.ICElement;
@@ -44,16 +46,13 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.core.IJavaProject;
-
-import net.ossindex.eclipse.common.ICUtils;
 
 /**
  * 
  * @author Ken Duck
  *
  */
-public class CUtils implements ICUtils
+public class CUtils extends CommonUtils implements ICUtils
 {
 
 	@SuppressWarnings("unused")
@@ -212,6 +211,4 @@ public class CUtils implements ICUtils
     	}
 		return object;
 	}
-	
-
 }

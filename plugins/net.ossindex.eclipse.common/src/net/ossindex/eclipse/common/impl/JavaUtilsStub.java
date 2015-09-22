@@ -130,6 +130,10 @@ public class JavaUtilsStub implements IJavaUtils
 		return classFile;
 	}
 
+	@Override
+	public void clean(String builderId) {
+	}
+
 
 
 }

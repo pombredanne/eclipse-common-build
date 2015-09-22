@@ -73,4 +73,9 @@ public interface ICUtils
 	 * @return
 	 */
 	public Object getResource(Object object);
+
+	/**
+	 * Clean all build related fields for all projects.
+	 */
+	public void clean(String builderId);
 }

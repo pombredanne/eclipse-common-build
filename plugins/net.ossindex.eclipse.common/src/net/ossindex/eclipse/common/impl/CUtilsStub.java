@@ -66,8 +66,20 @@ public class CUtilsStub implements ICUtils {
 		return false;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see net.ossindex.eclipse.common.ICUtils#getResource(java.lang.Object)
+	 */
 	@Override
 	public Object getResource(Object object) {
 		return object;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see net.ossindex.eclipse.common.ICUtils#clean(java.lang.String)
+	 */
+	@Override
+	public void clean(String builderId) {
 	}
 }

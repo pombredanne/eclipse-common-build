@@ -50,7 +50,7 @@ import org.eclipse.jdt.core.JavaModelException;
  * @author Ken Duck
  *
  */
-public class JavaUtils implements IJavaUtils
+public class JavaUtils extends CommonUtils implements IJavaUtils
 {
 	private IProject project;
 	private List<IPath> sourcePaths = new LinkedList<IPath>();
@@ -69,8 +69,11 @@ public class JavaUtils implements IJavaUtils
 	{
 		this.project = project;
 		IJavaProject javaProject = JavaCore.create(project);
-		loadSourcePaths(javaProject);
-		loadClassPaths(javaProject);
+		if(javaProject.exists())
+		{
+			loadSourcePaths(javaProject);
+			loadClassPaths(javaProject);
+		}
 	}
 	
 
@@ -430,5 +433,4 @@ public class JavaUtils implements IJavaUtils
 		path = path + ".java";
 		return path;
 	}
-
 }

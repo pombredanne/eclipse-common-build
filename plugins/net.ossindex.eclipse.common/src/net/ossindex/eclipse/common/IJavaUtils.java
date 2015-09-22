@@ -105,4 +105,9 @@ public interface IJavaUtils
 	 */
 	public IFile getSourceFile(IFile classFile);
 
+	/**
+	 * Clean all build related fields for all projects.
+	 */
+	public void clean(String builderId);
+
 }
