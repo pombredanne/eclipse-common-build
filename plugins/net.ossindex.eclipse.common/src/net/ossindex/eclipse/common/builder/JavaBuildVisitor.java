@@ -61,7 +61,7 @@ public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IRe
 	 * 
 	 */
 	private IJavaUtils utils = Utils.getJavaUtils();
-	
+
 	/**
 	 * Map for project specific utils
 	 */
@@ -89,36 +89,52 @@ public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IRe
 		IProject project = resource.getProject();
 		if(!utilMap.containsKey(project)) utilMap.put(project, Utils.getJavaUtils(project));
 		IJavaUtils utils = utilMap.get(project);
-		
+
 		// Handle cancellation
 		if(progress.isCanceled()) return false;
 
 		//		System.err.println("VISIT: " + resource);
-		if(isJavaFile(resource))
+		if(!buildsClass())
 		{
-			//System.out.println("  Java VISIT: " + resource);
-
-			if(isDirty((IFile)resource))
+			if(isJavaFile(resource))
 			{
-				buildSource(resource);
-				markBuilt((IFile)resource);
+				//System.out.println("  Java VISIT: " + resource);
+
+				if(isDirty((IFile)resource))
+				{
+					buildSource(resource);
+					markBuilt((IFile)resource);
+				}
 			}
 		}
-		if(isClassFile(resource))
+		else
 		{
-			//System.out.println("  Class VISIT: " + resource);
-
-			// Regardless of the amount of progress reported so far,
-			// use 2% of the space remaining in the monitor to process the next node.
-			IFile sourceFile = utils.getSourceFile((IFile)resource);
-			if(isDirty(sourceFile))
+			if(isClassFile(resource))
 			{
-				progress.setWorkRemaining(50);
-				buildClass(resource);
-				markBuilt(sourceFile);
-				progress.worked(1);
+				//System.out.println("  Class VISIT: " + resource);
+
+				// Regardless of the amount of progress reported so far,
+				// use 2% of the space remaining in the monitor to process the next node.
+				IFile sourceFile = utils.getSourceFile((IFile)resource);
+				if(isDirty(sourceFile))
+				{
+					progress.setWorkRemaining(10);
+					buildClass(resource);
+					markBuilt(sourceFile);
+					progress.worked(1);
+				}
 			}
 		}
+		return true;
+	}
+
+	/** Indicates whether this visitor is intended for class builders or
+	 * source builders. It cannot be for both.
+	 * 
+	 * @return
+	 */
+	protected boolean buildsClass()
+	{
 		return true;
 	}
 
@@ -163,7 +179,7 @@ public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IRe
 		}
 		return false;
 	}
-	
+
 	/** For our purposes we only care if a source file has changed. If the source
 	 * files have not changed then the class files should not have changed.
 	 * 
@@ -174,7 +190,7 @@ public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IRe
 	{
 		return isJavaFile(resource);
 	}
-	
+
 	/** Get the paths to source directories.
 	 * 
 	 * @param resource

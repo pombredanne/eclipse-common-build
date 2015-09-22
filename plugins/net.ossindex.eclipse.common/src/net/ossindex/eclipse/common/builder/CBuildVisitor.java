@@ -76,7 +76,7 @@ public abstract class CBuildVisitor extends CommonBuildVisitor implements IResou
 			{
 				// Regardless of the amount of progress reported so far,
 				// use 2% of the space remaining in the monitor to process the next node.
-				progress.setWorkRemaining(50);
+				progress.setWorkRemaining(10);
 				build(resource);
 				markBuilt((IFile)resource);
 				progress.worked(1);
