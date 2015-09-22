@@ -31,7 +31,6 @@ import net.ossindex.eclipse.common.Utils;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.runtime.CoreException;
@@ -46,18 +45,19 @@ import org.eclipse.core.runtime.SubMonitor;
  * @author Ken Duck
  *
  */
-public abstract class JavaBuildVisitor implements IResourceVisitor, IResourceDeltaVisitor
+public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IResourceVisitor, IResourceDeltaVisitor
 {
 
 	/**
 	 * Progress monitor
 	 */
 	private SubMonitor progress;
-	
+
 	private IJavaUtils utils = Utils.getJavaUtils();
 
-	public JavaBuildVisitor(IProgressMonitor monitor)
+	public JavaBuildVisitor(String builderId, IProgressMonitor monitor)
 	{
+		super(builderId);
 		progress = SubMonitor.convert(monitor);
 	}
 
@@ -71,12 +71,16 @@ public abstract class JavaBuildVisitor implements IResourceVisitor, IResourceDel
 		// Handle cancellation
 		if(progress.isCanceled()) return false;
 
-//		System.err.println("VISIT: " + resource);
+		//		System.err.println("VISIT: " + resource);
 		if(isJavaFile(resource))
 		{
 			//System.out.println("  Java VISIT: " + resource);
 
-			buildSource(resource);
+			if(isDirty((IFile)resource))
+			{
+				buildSource(resource);
+				markBuilt(resource);
+			}
 		}
 		if(isClassFile(resource))
 		{
@@ -84,9 +88,13 @@ public abstract class JavaBuildVisitor implements IResourceVisitor, IResourceDel
 
 			// Regardless of the amount of progress reported so far,
 			// use 2% of the space remaining in the monitor to process the next node.
-			progress.setWorkRemaining(50);
-			buildClass(resource);
-			progress.worked(1);
+			if(isDirty((IFile)resource))
+			{
+				progress.setWorkRemaining(50);
+				buildClass(resource);
+				markBuilt(resource);
+				progress.worked(1);
+			}
 		}
 		return true;
 	}
@@ -133,17 +141,6 @@ public abstract class JavaBuildVisitor implements IResourceVisitor, IResourceDel
 		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.eclipse.core.resources.IResourceDeltaVisitor#visit(org.eclipse.core.resources.IResourceDelta)
-	 */
-	@Override
-	public boolean visit(IResourceDelta delta) throws CoreException
-	{
-		IResource resource = delta.getResource();
-		return visit(resource);
-	}
-
 	/** Get the paths to source directories.
 	 * 
 	 * @param resource
@@ -162,7 +159,7 @@ public abstract class JavaBuildVisitor implements IResourceVisitor, IResourceDel
 	{
 		return utils.getClassPaths(resource);
 	}
-	
+
 	/**
 	 * 
 	 * @param resource

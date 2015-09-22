@@ -26,89 +26,89 @@
  */
 package net.ossindex.eclipse.common.builder;
 
-import net.ossindex.eclipse.common.ICUtils;
-import net.ossindex.eclipse.common.Utils;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.core.runtime.QualifiedName;
 
-/** Build visitor that identifies appropriate files, collects interesting
- * build information, and calls a method that will be useful for sub-classing.
- * 
- * This class is responsible for managing progress.
+/** Common code for the build visitors.
  * 
  * @author Ken Duck
  *
  */
-public abstract class CBuildVisitor extends CommonBuildVisitor implements IResourceVisitor, IResourceDeltaVisitor
+public abstract class CommonBuildVisitor implements IResourceVisitor, IResourceDeltaVisitor
 {
 	/**
-	 * Progress monitor
+	 * Used to determine whether the builder has run on specific files or not.
 	 */
-	private SubMonitor progress;
+	private QualifiedName timestampQualifier;
 
-	private ICUtils cutils = Utils.getCUtils();
-
-	public CBuildVisitor(String builderId, IProgressMonitor monitor)
+	/** Every builder should have a unique ID. This is used to determine whether the builder
+	 * has run on specific files or not.
+	 * 
+	 * @param builderId
+	 */
+	public CommonBuildVisitor(String builderId)
 	{
-		super(builderId);
-		progress = SubMonitor.convert(monitor);
+		timestampQualifier = new QualifiedName(builderId, ".TIMESTAMP");
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.eclipse.core.resources.IResourceVisitor#visit(org.eclipse.core.resources.IResource)
+	
+	/** Only rebuild dirty resources
+	 * 
+	 * @param resource
+	 * @return
 	 */
-	@Override
-	public boolean visit(IResource resource) throws CoreException
+	protected boolean isDirty(IFile file)
 	{
-		// Handle cancellation
-		if(cutils.isCppCompilationUnit(resource))
+		try
 		{
-			//			System.out.println("  C VISIT: " + resource);
-
-			if(isDirty((IFile)resource))
+			String timeString = file.getPersistentProperty(timestampQualifier);
+			if(timeString != null)
 			{
-				// Regardless of the amount of progress reported so far,
-				// use 2% of the space remaining in the monitor to process the next node.
-				progress.setWorkRemaining(50);
-				build(resource);
-				markBuilt(resource);
-				progress.worked(1);
+				long timestamp = Long.parseLong(timeString);
+				long modified = file.getLocation().toFile().lastModified();
+				if(timestamp > modified)
+				{
+					return false;
+				}
 			}
 		}
+		catch (CoreException | NumberFormatException e)
+		{
+			e.printStackTrace();
+		}
+		// If there is an exception, try and do the build
 		return true;
 	}
 
-	protected abstract void build(IResource resource);
-
-	/**
-	 * Get the settings for the provided resource
-	 */
-	protected String[] getIncludePaths(IResource resource)
-	{
-		return cutils.getIncludePaths(resource);
-	}
-
-	/**
-	 * Get the settings for the provided resource
-	 */
-	protected String[] getMacros(IResource resource)
-	{
-		return cutils.getMacros(resource);
-	}
-
-	/** Override the task name for the progress monitor
+	/** Mark the resource as "built" which means give it a timestamp. This allows
+	 * us to identify dirty files.
 	 * 
-	 * @param name
+	 * @param resource
 	 */
-	protected void setTaskName(String name)
+	protected void markBuilt(IResource resource)
 	{
-		progress.setTaskName(name);
+		try
+		{
+			resource.setPersistentProperty(timestampQualifier, Long.toString(System.currentTimeMillis()));
+		}
+		catch (CoreException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.eclipse.core.resources.IResourceDeltaVisitor#visit(org.eclipse.core.resources.IResourceDelta)
+	 */
+	@Override
+	public boolean visit(IResourceDelta delta) throws CoreException
+	{
+		IResource resource = delta.getResource();
+		return visit(resource);
 	}
 }

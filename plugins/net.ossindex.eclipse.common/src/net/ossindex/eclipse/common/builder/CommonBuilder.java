@@ -78,7 +78,6 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	 * 
 	 * @param monitor
 	 */
-	@SuppressWarnings("unused")
 	private void fullBuild(IProgressMonitor monitor)
 	{
 		try
