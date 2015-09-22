@@ -52,8 +52,8 @@ import org.eclipse.core.runtime.CoreException;
  */
 public class ConcurrentBuildManager implements Iterable<Future<ConcurrentBuildJob>>
 {
-//	private int maxJobs = Runtime.getRuntime().availableProcessors() * 2;
-	private int maxJobs = 2;
+	private int maxJobs = Runtime.getRuntime().availableProcessors() * 2;
+//	private int maxJobs = 2;
 
 	private IResourceVisitor visitor;
 	private ExecutorService executor;
