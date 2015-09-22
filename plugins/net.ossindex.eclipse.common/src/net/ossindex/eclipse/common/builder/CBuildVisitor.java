@@ -68,6 +68,8 @@ public abstract class CBuildVisitor extends CommonBuildVisitor implements IResou
 	public boolean visit(IResource resource) throws CoreException
 	{
 		// Handle cancellation
+		if(progress.isCanceled()) return false;
+
 		if(cutils.isCppCompilationUnit(resource))
 		{
 			//			System.out.println("  C VISIT: " + resource);
