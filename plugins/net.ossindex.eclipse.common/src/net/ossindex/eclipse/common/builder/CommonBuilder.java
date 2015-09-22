@@ -88,12 +88,12 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 		try
 		{
 			IResourceVisitor visitor = getBuildVisitor(monitor);
-			if(!IGNORE_BATCH && (visitor instanceof IBatchBuilder))
+			if(!IGNORE_BATCH && (visitor instanceof IBatchBuildVisitor))
 			{
-				if(((IBatchBuilder)visitor).areFilesDirty(getProject()))
+				if(((IBatchBuildVisitor)visitor).areFilesDirty(getProject()))
 				{
-					((IBatchBuilder)visitor).buildAll(getProject());
-					((IBatchBuilder)visitor).markAllBuilt(getProject());
+					((IBatchBuildVisitor)visitor).buildAll(getProject());
+					((IBatchBuildVisitor)visitor).markAllBuilt(getProject());
 				}
 			}
 			else
@@ -133,50 +133,53 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 		{
 			final CommonBuildVisitor visitor = (CommonBuildVisitor)getDeltaVisitor(null);
 
-			// Get a full list of changed files. We want to do this instead of the
-			// visitor so we know exactly how many files there are. This will be
-			// used to provide better progress monitoring, but more importantly
-			// it will allow us to decide whether to do batch processing
-			// or not.
-			final List<IFile> changed = new LinkedList<IFile>();
-			IResourceDeltaVisitor deltaVisitor = new IResourceDeltaVisitor()
+			if(visitor != null)
 			{
-				public boolean visit(IResourceDelta delta)
+				// Get a full list of changed files. We want to do this instead of the
+				// visitor so we know exactly how many files there are. This will be
+				// used to provide better progress monitoring, but more importantly
+				// it will allow us to decide whether to do batch processing
+				// or not.
+				final List<IFile> changed = new LinkedList<IFile>();
+				IResourceDeltaVisitor deltaVisitor = new IResourceDeltaVisitor()
 				{
-					//only interested in content changes and added files
-					if ((delta.getFlags() & IResourceDelta.CONTENT) == 0 &&
-							(delta.getKind() & IResourceDelta.ADDED) == 0) return true;
-
-					IResource resource = delta.getResource();
-					//only interested in files with the "txt" extension
-					if (resource instanceof IFile)
+					public boolean visit(IResourceDelta delta)
 					{
-						if(visitor.accepts((IFile)resource))
+						//only interested in content changes and added files
+						if ((delta.getFlags() & IResourceDelta.CONTENT) == 0 &&
+								(delta.getKind() & IResourceDelta.ADDED) == 0) return true;
+
+						IResource resource = delta.getResource();
+						//only interested in files with the "txt" extension
+						if (resource instanceof IFile)
 						{
-							changed.add((IFile)resource);
+							if(visitor.accepts((IFile)resource))
+							{
+								changed.add((IFile)resource);
+							}
+						}
+						return true;
+					}
+				};
+
+				delta.accept(deltaVisitor);
+
+				if(changed.size() > 0)
+				{
+					if(!IGNORE_BATCH && (visitor instanceof IBatchBuildVisitor))
+					{
+						if(changed.size() > getFullBuildThreshold())
+						{
+							visitor.setProgressMonitor(monitor);
+							((IBatchBuildVisitor)visitor).buildAll(getProject());
+							((IBatchBuildVisitor)visitor).markAllBuilt(getProject());
+							return;
 						}
 					}
-					return true;
+
+					// If we get here, then perform individual builds
+					buildFiles(changed, monitor);
 				}
-			};
-
-			delta.accept(deltaVisitor);
-
-			if(changed.size() > 0)
-			{
-				if(!IGNORE_BATCH && (visitor instanceof IBatchBuilder))
-				{
-					if(changed.size() > getFullBuildThreshold())
-					{
-						visitor.setProgressMonitor(monitor);
-						((IBatchBuilder)visitor).buildAll(getProject());
-						((IBatchBuilder)visitor).markAllBuilt(getProject());
-						return;
-					}
-				}
-
-				// If we get here, then perform individual builds
-				buildFiles(changed, monitor);
 			}
 		}
 		catch (CoreException e)
