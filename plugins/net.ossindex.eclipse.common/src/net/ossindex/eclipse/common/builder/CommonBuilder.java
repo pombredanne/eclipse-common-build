@@ -315,7 +315,7 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 
 		for (IFile file : changed)
 		{
-			progress.setTaskName("Processing " + file.getName());
+			progress.setTaskName("Scheduling " + file.getName());
 			try
 			{
 				manager.visit(file);
