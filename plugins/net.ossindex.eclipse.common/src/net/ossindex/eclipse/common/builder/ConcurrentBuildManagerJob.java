@@ -72,8 +72,9 @@ public class ConcurrentBuildManagerJob extends Job implements IBuildJobListener
 		//for(Future<ConcurrentBuildJob> future: buildManager)
 		while(!buildManager.done())
 		{
+			System.err.println("Check completion...");
 			// Get out if cancelled
-			if(progress.isCanceled())
+			if(progress.isCanceled() || size == 0)
 			{
 				buildManager.shutdownNow();
 				break;
@@ -87,7 +88,6 @@ public class ConcurrentBuildManagerJob extends Job implements IBuildJobListener
 //			{
 //				e.printStackTrace();
 //			}
-			this.yieldRule(null);
 		}
 		
 		try
@@ -125,14 +125,7 @@ public class ConcurrentBuildManagerJob extends Job implements IBuildJobListener
 		progress.worked(1);
 		if(completed >= size)
 		{
-			try
-			{
-				buildManager.shutdown();
-			}
-			catch (InterruptedException | ExecutionException e)
-			{
-				e.printStackTrace();
-			}
+			buildManager.shutdownNow();
 		}
 	}
 

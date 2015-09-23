@@ -183,7 +183,7 @@ public class ConcurrentBuildManager implements Iterable<Future<ConcurrentBuildJo
 	{
 		try
 		{
-			return executor.awaitTermination(1000, TimeUnit.MILLISECONDS);
+			return executor.awaitTermination(500, TimeUnit.MILLISECONDS);
 		}
 		catch (InterruptedException e)
 		{
