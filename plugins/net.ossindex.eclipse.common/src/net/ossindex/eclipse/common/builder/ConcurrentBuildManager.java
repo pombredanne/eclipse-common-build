@@ -34,6 +34,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResourceVisitor;
@@ -69,6 +70,8 @@ public class ConcurrentBuildManager implements Iterable<Future<ConcurrentBuildJo
 	 */
 	private boolean isRunning = true;
 
+	private List<IBuildJobListener> listeners = new LinkedList<IBuildJobListener>();
+
 	public ConcurrentBuildManager(IResourceVisitor visitor)
 	{
 		this.visitor = visitor;
@@ -85,7 +88,7 @@ public class ConcurrentBuildManager implements Iterable<Future<ConcurrentBuildJo
 	 */
 	public void visit(IFile file) throws CoreException
 	{
-		Callable<ConcurrentBuildJob> worker = new ConcurrentBuildJob(visitor, file);
+		Callable<ConcurrentBuildJob> worker = new ConcurrentBuildJob(visitor, file, listeners);
 		Future<ConcurrentBuildJob> job = executor.submit(worker);
 		jobs.add(job);
 		names.add(file.getName());
@@ -161,5 +164,31 @@ public class ConcurrentBuildManager implements Iterable<Future<ConcurrentBuildJo
 	public boolean isRunning()
 	{
 		return isRunning;
+	}
+
+	/**
+	 * 
+	 * @param listener
+	 */
+	public void addBuildJobListener(IBuildJobListener listener)
+	{
+		this.listeners .add(listener);
+	}
+
+	/** Return true if the jobs are all complete
+	 * 
+	 * @return
+	 */
+	public boolean done()
+	{
+		try
+		{
+			return executor.awaitTermination(1000, TimeUnit.MILLISECONDS);
+		}
+		catch (InterruptedException e)
+		{
+			e.printStackTrace();
+		}
+		return false;
 	}
 }

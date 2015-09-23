@@ -27,8 +27,8 @@
 package net.ossindex.eclipse.common.builder;
 
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -41,15 +41,20 @@ import org.eclipse.core.runtime.jobs.Job;
  * @author Ken Duck
  *
  */
-public class ConcurrentBuildManagerJob extends Job
+public class ConcurrentBuildManagerJob extends Job implements IBuildJobListener
 {
 
 	private ConcurrentBuildManager buildManager;
+	private SubMonitor progress;
+	private int size;
+	private int started = 0;
+	private int completed = 0;
 
 	public ConcurrentBuildManagerJob(ConcurrentBuildManager manager)
 	{
 		super("Concurrent build manager");
 		this.buildManager = manager;
+		manager.addBuildJobListener(this);
 	}
 
 	/** Run each of the concurrent builds, showing progress as they complete.
@@ -59,13 +64,13 @@ public class ConcurrentBuildManagerJob extends Job
 	@Override
 	protected IStatus run(IProgressMonitor monitor)
 	{
-		int size = buildManager.getSize();
-		SubMonitor progress = SubMonitor.convert(monitor);
-		progress.setWorkRemaining(size);
-		int index = 0;
+		this.size = buildManager.getSize();
+		SubMonitor progress = SubMonitor.convert(monitor, size);
+		this.progress = progress;
 		
 		// Fun all the jobs.
-		for(Future<ConcurrentBuildJob> future: buildManager)
+		//for(Future<ConcurrentBuildJob> future: buildManager)
+		while(!buildManager.done())
 		{
 			// Get out if cancelled
 			if(progress.isCanceled())
@@ -74,18 +79,15 @@ public class ConcurrentBuildManagerJob extends Job
 				break;
 			}
 			
-			progress.setTaskName("Concurrent build: " + buildManager.getName(index));
-			index++;
-			try
-			{
-				future.get();
-			}
-			catch (InterruptedException | ExecutionException e)
-			{
-				e.printStackTrace();
-			}
-			progress.worked(1);
-			yieldRule(progress);
+//			try
+//			{
+//				future.get();
+//			}
+//			catch (InterruptedException | ExecutionException e)
+//			{
+//				e.printStackTrace();
+//			}
+			this.yieldRule(null);
 		}
 		
 		try
@@ -100,6 +102,38 @@ public class ConcurrentBuildManagerJob extends Job
 			e.printStackTrace();
 		}
 		return Status.OK_STATUS;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see net.ossindex.eclipse.common.builder.IBuildJobListener#buildStarted(org.eclipse.core.resources.IFile)
+	 */
+	@Override
+	public void buildStarted(IFile file) {
+		started++;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see net.ossindex.eclipse.common.builder.IBuildJobListener#buildCompleted(org.eclipse.core.resources.IFile)
+	 */
+	@Override
+	public void buildCompleted(IFile file) {
+		completed++;
+		progress.setTaskName("Concurrent build: [" + completed + "/" + size + "] " + file.getName());
+		System.err.println("COMPLETED: [" + completed + "/" + size + "] " + file.getName());
+		progress.worked(1);
+		if(completed >= size)
+		{
+			try
+			{
+				buildManager.shutdown();
+			}
+			catch (InterruptedException | ExecutionException e)
+			{
+				e.printStackTrace();
+			}
+		}
 	}
 
 }

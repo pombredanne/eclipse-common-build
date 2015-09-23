@@ -141,7 +141,6 @@ public abstract class CommonBuildVisitor implements IResourceVisitor, IResourceD
 			}
 			catch (CoreException e)
 			{
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -181,7 +180,6 @@ public abstract class CommonBuildVisitor implements IResourceVisitor, IResourceD
 			}
 			catch (CoreException e)
 			{
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}

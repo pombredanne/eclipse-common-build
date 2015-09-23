@@ -309,13 +309,16 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	private void buildConcurrent(IResourceVisitor visitor, List<IFile> changed, IProgressMonitor monitor)
 	{
 		SubMonitor progress = SubMonitor.convert(monitor);
-		progress.setWorkRemaining(changed.size());
+		int size = changed.size();
+		progress.setWorkRemaining(size);
 
 		ConcurrentBuildManager manager = new ConcurrentBuildManager(visitor);
 
+		int index = 0;
 		for (IFile file : changed)
 		{
-			progress.setTaskName("Scheduling " + file.getName());
+			index++;
+			progress.setTaskName("Scheduling [" + index + "/" + size + "] " + file.getName());
 			try
 			{
 				manager.visit(file);

@@ -26,57 +26,18 @@
  */
 package net.ossindex.eclipse.common.builder;
 
-import java.util.List;
-import java.util.concurrent.Callable;
-
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IResourceVisitor;
 
-/** A job that performs a build step concurrently
+/** Used to better track the number of jobs started and completed, since
+ * futures are terribly unpredictable.
  * 
  * @author Ken Duck
  *
  */
-public class ConcurrentBuildJob implements Callable<ConcurrentBuildJob>
-{
+public interface IBuildJobListener {
 
-	private IResourceVisitor visitor;
-	private IFile file;
-	private List<IBuildJobListener> listeners;
+	void buildStarted(IFile file);
 
-	public ConcurrentBuildJob(IResourceVisitor visitor, IFile file, List<IBuildJobListener> listeners)
-	{
-		this.visitor = visitor;
-		this.file = file;
-		this.listeners = listeners;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.util.concurrent.Callable#call()
-	 */
-	@Override
-	public ConcurrentBuildJob call() throws Exception
-	{
-		try
-		{
-			for (IBuildJobListener listener : listeners)
-			{
-				listener.buildStarted(file);
-			}
-			visitor.visit(file);
-		}
-		finally
-		{
-			if(listeners != null)
-			{
-				for (IBuildJobListener listener : listeners)
-				{
-					listener.buildCompleted(file);
-				}
-			}
-		}
-		return this;
-	}
+	void buildCompleted(IFile file);
 
 }
