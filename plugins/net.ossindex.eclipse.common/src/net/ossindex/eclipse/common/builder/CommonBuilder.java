@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
@@ -55,6 +54,11 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	 * For debug purposes only
 	 */
 	private static final boolean IGNORE_BATCH = false;
+
+	/**
+	 * Indicate whether we want the concurrent build to block or not
+	 */
+	private static final boolean CONCURRENT_BLOCKING = true;
 
 	public CommonBuilder()
 	{
@@ -312,7 +316,7 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 		int size = changed.size();
 		progress.setWorkRemaining(size);
 
-		ConcurrentBuildManager manager = new ConcurrentBuildManager(visitor);
+		ConcurrentBuildManager manager = new ConcurrentBuildManager(visitor, CONCURRENT_BLOCKING);
 
 		int index = 0;
 		for (IFile file : changed)
@@ -321,7 +325,7 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 			progress.setTaskName("Scheduling [" + index + "/" + size + "] " + file.getName());
 			try
 			{
-				manager.visit(file);
+				manager.schedule(file);
 			}
 			catch (CoreException e)
 			{
@@ -330,25 +334,40 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 			progress.worked(1);
 		}
 
-		// Non-blocking mode
-		// Make a job to monitor the concurrent build process
-		Job job = new ConcurrentBuildManagerJob(manager);
-		// Start the Job
-		//job.setUser(true);
-		job.setPriority(Job.BUILD);
-		job.schedule();
+		// Non-blocking mode requires a separate job
+		if(!CONCURRENT_BLOCKING)
+		{
+			// Non-blocking mode
+			// Make a job to monitor the concurrent build process
+			Job job = new ConcurrentBuildManagerJob(manager);
+			// Start the Job
+			//job.setUser(true);
+			job.setPriority(Job.BUILD);
+			job.schedule();
 
-		// Blocking mode
-		//		// Wait for all jobs to complete
-		//		try
-		//		{
-		//			progress.setTaskName("Finalizing concurrent build");
-		//			manager.shutdown();
-		//		}
-		//		catch (InterruptedException | ExecutionException e)
-		//		{
-		//			e.printStackTrace();
-		//		}
+			// Blocking mode
+			//		// Wait for all jobs to complete
+			//		try
+			//		{
+			//			progress.setTaskName("Finalizing concurrent build");
+			//			manager.shutdown();
+			//		}
+			//		catch (InterruptedException | ExecutionException e)
+			//		{
+			//			e.printStackTrace();
+			//		}
+		}
+		else
+		{
+			try
+			{
+				manager.shutdown(true);
+			}
+			catch (InterruptedException | ExecutionException e)
+			{
+				e.printStackTrace();
+			}
+		}
 	}
 
 	protected abstract IResourceDeltaVisitor getDeltaVisitor(IProgressMonitor monitor);

@@ -94,7 +94,7 @@ public class ConcurrentBuildManagerJob extends Job implements IBuildJobListener
 		{
 			if(buildManager.isRunning())
 			{
-				buildManager.shutdown();
+				buildManager.shutdown(false);
 			}
 		}
 		catch (InterruptedException | ExecutionException e)

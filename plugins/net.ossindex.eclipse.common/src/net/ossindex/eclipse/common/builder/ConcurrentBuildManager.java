@@ -26,14 +26,16 @@
  */
 package net.ossindex.eclipse.common.builder;
 
-import java.util.Iterator;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.core.resources.IFile;
@@ -51,10 +53,19 @@ import org.eclipse.core.runtime.CoreException;
  * @author Ken Duck
  *
  */
-public class ConcurrentBuildManager implements Iterable<Future<ConcurrentBuildJob>>
+public class ConcurrentBuildManager implements IBuildJobListener
 {
-	private int maxJobs = Runtime.getRuntime().availableProcessors() * 2;
-//	private int maxJobs = 2;
+	/**
+	 * Assume that jobs should last no longer than 2 minutes each for now.
+	 */
+	private static final long MAX_TIMEOUT = 120;
+
+	/**
+	 * Maximum number of jobs to run on the machine. This version constrains
+	 * by the number of processors.
+	 */
+	private int MAX_JOBS = Runtime.getRuntime().availableProcessors() * 2;
+	// private int MAX_JOBS = 2;
 
 	private IResourceVisitor visitor;
 	private ExecutorService executor;
@@ -62,8 +73,7 @@ public class ConcurrentBuildManager implements Iterable<Future<ConcurrentBuildJo
 	/**
 	 * Current set of jobs to execute
 	 */
-	private List<Future<ConcurrentBuildJob>> jobs;
-	private List<String> names;
+	private Collection<IFile> jobs;
 
 	/**
 	 * True while the executor has not been shut down
@@ -72,12 +82,28 @@ public class ConcurrentBuildManager implements Iterable<Future<ConcurrentBuildJo
 
 	private List<IBuildJobListener> listeners = new LinkedList<IBuildJobListener>();
 
-	public ConcurrentBuildManager(IResourceVisitor visitor)
+	/** Start a concurrent build manager.
+	 * 
+	 * @param visitor
+	 * @param blocking Indicate whether the job queue is blocking or not. Non-blocking
+	 *                 will be used when the concurrent manager is running under
+	 *                 its own job.
+	 */
+	public ConcurrentBuildManager(IResourceVisitor visitor, boolean blocking)
 	{
 		this.visitor = visitor;
-		executor = Executors.newFixedThreadPool(maxJobs);
-		jobs = new LinkedList<Future<ConcurrentBuildJob>>();
-		names = new LinkedList<String>();
+		executor = Executors.newFixedThreadPool(MAX_JOBS);
+		if(blocking)
+		{
+			jobs = new ArrayBlockingQueue<IFile>(MAX_JOBS);
+		}
+		else
+		{
+			jobs = new HashSet<IFile>();
+		}
+
+		// We need to track completion for the sake of the blocking queue
+		listeners.add(this);
 	}
 
 	/** Request a new file be visited. This may block depending on the status of
@@ -86,50 +112,59 @@ public class ConcurrentBuildManager implements Iterable<Future<ConcurrentBuildJo
 	 * @param file
 	 * @throws CoreException 
 	 */
-	public void visit(IFile file) throws CoreException
+	public void schedule(IFile file) throws CoreException
 	{
-		Callable<ConcurrentBuildJob> worker = new ConcurrentBuildJob(visitor, file, listeners);
-		Future<ConcurrentBuildJob> job = executor.submit(worker);
-		jobs.add(job);
-		names.add(file.getName());
-	}
-
-	/**
-	 * 
-	 * @throws InterruptedException
-	 * @throws ExecutionException
-	 */
-	public void runall() throws InterruptedException, ExecutionException
-	{
-		for(Future<ConcurrentBuildJob> future: jobs)
+		// This will block once enough jobs are already submitted
+		if(jobs instanceof BlockingQueue)
 		{
-			@SuppressWarnings("unused")
-			ConcurrentBuildJob job = future.get();
+			try
+			{
+				System.err.println("Adding:  " + file);
+				((BlockingQueue<IFile>)jobs).put(file);
+				System.err.println("  Added: " + file);
+			}
+			catch (InterruptedException e)
+			{
+				e.printStackTrace();
+			}
 		}
+		else
+		{
+			jobs.add(file);
+		}
+		Callable<ConcurrentBuildJob> worker = new ConcurrentBuildJob(visitor, file, listeners);
+		executor.submit(worker);
 	}
 
 	/**
 	 * 
+	 * @param file
+	 */
+	public void build(IFile file)
+	{
+		executor.execute(new ConcurrentBuildJob(visitor, file, listeners));
+	}
+
+	/** Shut down the executor and optionally wait for completion
+	 * 
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 */
-	public void shutdown() throws InterruptedException, ExecutionException
+	public void shutdown(boolean wait) throws InterruptedException, ExecutionException
 	{
 		if(isRunning)
 		{
 			isRunning = false;
 			executor.shutdown();
+			if(wait)
+			{
+				if(!executor.awaitTermination(MAX_TIMEOUT, TimeUnit.SECONDS))
+				{
+					// Failed to shutdown in time. Force the issue.
+					executor.shutdownNow();
+				}
+			}
 		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Iterable#iterator()
-	 */
-	@Override
-	public Iterator<Future<ConcurrentBuildJob>> iterator()
-	{
-		return jobs.iterator();
 	}
 
 	/** Get the number of jobs
@@ -139,17 +174,6 @@ public class ConcurrentBuildManager implements Iterable<Future<ConcurrentBuildJo
 	public int getSize()
 	{
 		return jobs.size();
-	}
-
-	/** Get the name for the specified job index
-	 * 
-	 * @param index
-	 * @return
-	 */
-	public String getName(int index)
-	{
-		if(index < names.size()) return names.get(index);
-		return "";
 	}
 
 	public void shutdownNow()
@@ -191,4 +215,27 @@ public class ConcurrentBuildManager implements Iterable<Future<ConcurrentBuildJo
 		}
 		return false;
 	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see net.ossindex.eclipse.common.builder.IBuildJobListener#buildStarted(org.eclipse.core.resources.IFile)
+	 */
+	@Override
+	public void buildStarted(IFile file)
+	{
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see net.ossindex.eclipse.common.builder.IBuildJobListener#buildCompleted(org.eclipse.core.resources.IFile)
+	 */
+	@Override
+	public void buildCompleted(IFile file)
+	{
+		// A completed job should be removed from the blocking queue
+		System.err.println("Removing:  " + file);
+		jobs.remove(file);
+		System.err.println("  Removed: " + file);
+	}
+
 }

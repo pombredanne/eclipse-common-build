@@ -131,7 +131,7 @@ public class JavaUtilsStub implements IJavaUtils
 	}
 
 	@Override
-	public void clean(String builderId) {
+	public void clean(String[] builderIds) {
 	}
 
 

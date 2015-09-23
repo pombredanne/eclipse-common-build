@@ -80,6 +80,6 @@ public class CUtilsStub implements ICUtils {
 	 * @see net.ossindex.eclipse.common.ICUtils#clean(java.lang.String)
 	 */
 	@Override
-	public void clean(String builderId) {
+	public void clean(String[] builderIds) {
 	}
 }

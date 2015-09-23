@@ -108,6 +108,6 @@ public interface IJavaUtils
 	/**
 	 * Clean all build related fields for all projects.
 	 */
-	public void clean(String builderId);
+	public void clean(String[] builderIds);
 
 }

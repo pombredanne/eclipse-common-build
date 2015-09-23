@@ -37,7 +37,7 @@ import org.eclipse.core.resources.IResourceVisitor;
  * @author Ken Duck
  *
  */
-public class ConcurrentBuildJob implements Callable<ConcurrentBuildJob>
+public class ConcurrentBuildJob implements Callable<ConcurrentBuildJob>, Runnable
 {
 
 	private IResourceVisitor visitor;
@@ -60,11 +60,17 @@ public class ConcurrentBuildJob implements Callable<ConcurrentBuildJob>
 	{
 		try
 		{
-			for (IBuildJobListener listener : listeners)
+			System.err.println("Pre-build:    " + file);
+			if(listeners != null)
 			{
-				listener.buildStarted(file);
+				for (IBuildJobListener listener : listeners)
+				{
+					listener.buildStarted(file);
+				}
 			}
+			System.err.println("  Building:   " + file);
 			visitor.visit(file);
+			System.err.println("  Built:      " + file);
 		}
 		finally
 		{
@@ -76,7 +82,25 @@ public class ConcurrentBuildJob implements Callable<ConcurrentBuildJob>
 				}
 			}
 		}
+		System.err.println("  Post-build: " + file);
 		return this;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Runnable#run()
+	 */
+	@Override
+	public void run()
+	{
+		try
+		{
+			call();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 }

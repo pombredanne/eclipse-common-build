@@ -26,6 +26,9 @@
  */
 package net.ossindex.eclipse.common.impl;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -61,16 +64,16 @@ public abstract class CommonUtils
 	 * 
 	 * @param builderId
 	 */
-	public void clean(String builderId)
+	public void clean(String[] builderIds)
 	{
 		// Clear the timestamp. This tells the builder it needs to run again.
-		final QualifiedName timestampQualifier = new QualifiedName(builderId, ".TIMESTAMP");
+		final List<QualifiedName> stamps = new LinkedList<QualifiedName>();
+		for(String builderId: builderIds)
+		{
+			stamps.add(new QualifiedName(builderId, ".TIMESTAMP"));
+		}
 
-		String toolName = builderId;
-		int index = toolName.lastIndexOf('.');
-		if(index > 0) toolName = toolName.substring(index + 1);
-		toolName = toolName.replace("Adaptor", "");
-		Job job = new Job("Clean " + toolName + " build flags...") {
+		Job job = new Job("Clean build flags...") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 
@@ -84,7 +87,10 @@ public abstract class CommonUtils
 				{
 					if(project.isOpen())
 					{
-						clean(timestampQualifier, project);
+						for(QualifiedName timestampQualifier: stamps)
+						{
+							clean(timestampQualifier, project);
+						}
 					}
 				}
 
