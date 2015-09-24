@@ -60,7 +60,6 @@ public class ConcurrentBuildJob implements Callable<ConcurrentBuildJob>, Runnabl
 	{
 		try
 		{
-			System.err.println("Pre-build:    " + file);
 			if(listeners != null)
 			{
 				for (IBuildJobListener listener : listeners)
@@ -68,9 +67,7 @@ public class ConcurrentBuildJob implements Callable<ConcurrentBuildJob>, Runnabl
 					listener.buildStarted(file);
 				}
 			}
-			System.err.println("  Building:   " + file);
 			visitor.visit(file);
-			System.err.println("  Built:      " + file);
 		}
 		finally
 		{
@@ -82,7 +79,6 @@ public class ConcurrentBuildJob implements Callable<ConcurrentBuildJob>, Runnabl
 				}
 			}
 		}
-		System.err.println("  Post-build: " + file);
 		return this;
 	}
 

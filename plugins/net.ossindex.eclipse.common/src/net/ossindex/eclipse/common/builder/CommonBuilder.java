@@ -287,10 +287,14 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	{
 		SubMonitor progress = SubMonitor.convert(monitor);
 		progress.setWorkRemaining(changed.size());
+		
+		int index = 0;
+		int size = changed.size();
 
 		for (IFile file : changed)
 		{
-			progress.setTaskName("Processing " + file.getName());
+			index++;
+			progress.setTaskName("Processing [" + index + "/" + size + "] " + file.getName() + " {" + getName() + "}");
 			try
 			{
 				visitor.visit(file);
@@ -302,6 +306,12 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 			progress.worked(1);
 		}
 	}
+
+	/** Get a name for this builder. Used in progress messages.
+	 * 
+	 * @return
+	 */
+	protected abstract String getName();
 
 	/** Build concurrently. This involves having a thread pool which we spool the
 	 * various "visits" to. We need to wait at the end for all threads to exit.
@@ -322,7 +332,7 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 		for (IFile file : changed)
 		{
 			index++;
-			progress.setTaskName("Scheduling [" + index + "/" + size + "] " + file.getName());
+			progress.setTaskName("Scheduling [" + index + "/" + size + "] " + file.getName() + " {" + getName() + "}");
 			try
 			{
 				manager.schedule(file);

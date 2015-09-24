@@ -119,9 +119,7 @@ public class ConcurrentBuildManager implements IBuildJobListener
 		{
 			try
 			{
-				System.err.println("Adding:  " + file);
 				((BlockingQueue<IFile>)jobs).put(file);
-				System.err.println("  Added: " + file);
 			}
 			catch (InterruptedException e)
 			{
@@ -233,9 +231,7 @@ public class ConcurrentBuildManager implements IBuildJobListener
 	public void buildCompleted(IFile file)
 	{
 		// A completed job should be removed from the blocking queue
-		System.err.println("Removing:  " + file);
 		jobs.remove(file);
-		System.err.println("  Removed: " + file);
 	}
 
 }
