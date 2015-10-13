@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -198,6 +199,10 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 					{
 						changed.add((IFile)resource);
 					}
+					else if(resource instanceof IContainer)
+					{
+						return visitor.acceptsContainer((IContainer)resource);
+					}
 				}
 				return true;
 			}
@@ -232,6 +237,10 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 					{
 						changed.add((IFile)resource);
 					}
+				}
+				else if(resource instanceof IContainer)
+				{
+					return visitor.acceptsContainer((IContainer)resource);
 				}
 				return true;
 			}

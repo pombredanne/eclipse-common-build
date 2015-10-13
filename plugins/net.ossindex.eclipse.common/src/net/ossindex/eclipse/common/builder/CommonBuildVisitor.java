@@ -128,20 +128,23 @@ public abstract class CommonBuildVisitor implements IResourceVisitor, IResourceD
 		}
 		else if(resource instanceof IContainer)
 		{
-			try
+			if(acceptsContainer((IContainer)resource))
 			{
-				IResource[] members = ((IContainer)resource).members();
-				if(members != null)
+				try
 				{
-					for (IResource member : members)
+					IResource[] members = ((IContainer)resource).members();
+					if(members != null)
 					{
-						markAllBuilt(member);
+						for (IResource member : members)
+						{
+							markAllBuilt(member);
+						}
 					}
 				}
-			}
-			catch (CoreException e)
-			{
-				e.printStackTrace();
+				catch (CoreException e)
+				{
+					e.printStackTrace();
+				}
 			}
 		}
 	}
@@ -166,25 +169,35 @@ public abstract class CommonBuildVisitor implements IResourceVisitor, IResourceD
 		}
 		else if(resource instanceof IContainer)
 		{
-			try
+			if(acceptsContainer((IContainer)resource))
 			{
-				IResource[] members = ((IContainer)resource).members();
-				if(members != null)
+				try
 				{
-					for (IResource member : members)
+					IResource[] members = ((IContainer)resource).members();
+					if(members != null)
 					{
-						boolean dirty = areFilesDirty(member);
-						if(dirty) return true;
+						for (IResource member : members)
+						{
+							boolean dirty = areFilesDirty(member);
+							if(dirty) return true;
+						}
 					}
 				}
-			}
-			catch (CoreException e)
-			{
-				e.printStackTrace();
+				catch (CoreException e)
+				{
+					e.printStackTrace();
+				}
 			}
 		}
 		return false;
 	}
+
+	/** Indicates whether the provided folder should be explored by the builder.
+	 * 
+	 * @param resource
+	 * @return
+	 */
+	protected abstract boolean acceptsContainer(IContainer resource);
 
 	/** Indicates whether the provided file is the type of file that will
 	 * be built by the builder.
