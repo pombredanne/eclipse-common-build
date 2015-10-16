@@ -29,9 +29,11 @@ package net.ossindex.eclipse.common;
 import net.ossindex.eclipse.common.impl.CUtilsStub;
 import net.ossindex.eclipse.common.impl.JavaUtilsStub;
 
-import org.eclipse.cdt.core.model.ICElement;
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.QualifiedName;
 
 /**
  * 
@@ -118,5 +120,45 @@ public class Utils
 		} 
 	}
 
+	/** Clear builder timestamps that are used to prevent re-build.
+	 * 
+	 * @param resource
+	 * @param builderId
+	 */
+	public static void resetBuilderTimestamp(IResource resource, String builderId)
+	{
+		try
+		{
+			QualifiedName timestampQualifier = new QualifiedName(builderId, ".TIMESTAMP");
+			resetBuilderTimestamp(resource, timestampQualifier);
+		}
+		catch (CoreException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	/** Clear builder timestamps that are used to prevent re-build.
+	 * 
+	 * @param resource
+	 * @param qname
+	 * @throws CoreException 
+	 */
+	private static void resetBuilderTimestamp(IResource resource, QualifiedName qname) throws CoreException
+	{
+		resource.setPersistentProperty(qname, null);
+		
+		if(resource instanceof IContainer)
+		{
+			IResource[] resources = ((IContainer)resource).members();
+			if(resources != null)
+			{
+				for (IResource child : resources)
+				{
+					resetBuilderTimestamp(child, qname);
+				}
+			}
+		}
+	}
 
 }

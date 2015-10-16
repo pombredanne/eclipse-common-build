@@ -68,14 +68,17 @@ public abstract class CommonBuildVisitor implements IResourceVisitor, IResourceD
 	{
 		try
 		{
-			String timeString = file.getPersistentProperty(timestampQualifier);
-			if(timeString != null)
+			if(useTimestamp())
 			{
-				long timestamp = Long.parseLong(timeString);
-				long modified = file.getLocation().toFile().lastModified();
-				if(timestamp > modified)
+				String timeString = file.getPersistentProperty(timestampQualifier);
+				if(timeString != null)
 				{
-					return false;
+					long timestamp = Long.parseLong(timeString);
+					long modified = file.getLocation().toFile().lastModified();
+					if(timestamp > modified)
+					{
+						return false;
+					}
 				}
 			}
 		}
@@ -84,6 +87,16 @@ public abstract class CommonBuildVisitor implements IResourceVisitor, IResourceD
 			e.printStackTrace();
 		}
 		// If there is an exception, try and do the build
+		return true;
+	}
+
+	/** For plugins that only run when resources change, this should return true. Otherwise
+	 * return false.
+	 * 
+	 * @return
+	 */
+	protected boolean useTimestamp()
+	{
 		return true;
 	}
 

@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Common
-Bundle-SymbolicName: net.ossindex.eclipse.common
+Bundle-SymbolicName: net.ossindex.eclipse.common;singleton:=true
 Bundle-Version: 1.0.1.qualifier
 Bundle-Activator: net.ossindex.eclipse.common.Activator
 Require-Bundle: org.eclipse.core.runtime,
