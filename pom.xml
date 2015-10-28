@@ -13,10 +13,12 @@
   <properties>
     <junit-version>4.8.1</junit-version>
     <tycho-version>0.23.0</tycho-version>
-  </properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+ </properties>
 
   <modules>
     <module>plugins</module>
+    <module>features</module>
   </modules>
 
   <repositories>
@@ -47,6 +49,7 @@
             <encoding>UTF-8</encoding>
           </configuration>
         </plugin>
+		<!--
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
@@ -62,6 +65,7 @@
           <artifactId>maven-assembly-plugin</artifactId>
           <version>2.2.1</version>
         </plugin>
+		-->
         <plugin>
           <groupId>org.eclipse.tycho</groupId>
           <artifactId>target-platform-configuration</artifactId>
