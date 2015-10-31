@@ -9,7 +9,7 @@
     <version>1.0.1-SNAPSHOT</version>
   </parent>
 
-  <groupId>net.ossindex.eclipse</groupId>
+  <groupId>net.ossindex.eclipse.build</groupId>
   <artifactId>plugins</artifactId>
   <name>OSS Index Eclipse plugins</name>
   <packaging>pom</packaging>

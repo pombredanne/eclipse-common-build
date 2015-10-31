@@ -8,7 +8,7 @@
     <version>1.0.1-SNAPSHOT</version>
   </parent>
 
-  <groupId>net.ossindex.eclipse</groupId>
+  <groupId>net.ossindex.eclipse.build</groupId>
   <artifactId>features</artifactId>
   <name>OSS Index Eclipse features</name>
   <packaging>pom</packaging>
