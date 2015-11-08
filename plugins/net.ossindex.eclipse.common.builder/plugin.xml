@@ -1,3 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin>
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="net.ossindex.eclipse.common.builder.handlers.OssIndexBuildHandler"
+            commandId="net.ossindex.eclipse.common.builder.commands.OssIndexBuildCommand">
+      </handler>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="net.ossindex.eclipse.common.builder.commands.OssIndexBuildCommand"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+6">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="menu:project?after=buildClean">
+         <command
+               commandId="net.ossindex.eclipse.common.builder.commands.OssIndexBuildCommand"
+               id="net.ossindex.eclipse.common.builder.menus.OssIndexBuildCommand"
+               mnemonic="O">
+         </command>
+      </menuContribution>
+      <menuContribution
+            locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+         <toolbar
+               id="net.ossindex.eclipse.common.builder.toolbars.OssIndexBuildToolbar">
+            <command
+                  commandId="net.ossindex.eclipse.common.builder.commands.OssIndexBuildCommand"
+                  icon="icons/sample.gif"
+                  id="net.ossindex.eclipse.common.builder.toolbars.OssIndexBuildCommand"
+                  tooltip="OSS Index Build">
+            </command>
+         </toolbar>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            id="net.ossindex.eclipse.common.builder.commands.category"
+            name="OSS Index Category">
+      </category>
+      <command
+            categoryId="net.ossindex.eclipse.common.builder.commands.category"
+            id="net.ossindex.eclipse.common.builder.commands.OssIndexBuildCommand"
+            name="OSS Index Build">
+      </command>
+   </extension>
 </plugin>
