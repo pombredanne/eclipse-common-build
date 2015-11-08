@@ -10,12 +10,14 @@
                <reference
                      definitionId="net.ossindex.eclipse.common.builder.ProjectSelected">
                </reference>
-               <with
-                     variable="net.ossindex.eclipse.common.builder.buildAutomatically.active">
-                  <equals
-                        value="ENABLED">
-                  </equals>
-               </with>
+               <not>
+                  <with
+                        variable="net.ossindex.eclipse.common.builder.buildAutomatically.active">
+                     <equals
+                           value="ENABLED">
+                     </equals>
+                  </with>
+               </not>
             </and></enabledWhen>
       </handler>
    </extension>
@@ -35,6 +37,7 @@
          <command
                commandId="net.ossindex.eclipse.common.builder.commands.OssIndexBuildCommand"
                id="net.ossindex.eclipse.common.builder.menus.OssIndexBuildCommand"
+               label="(Re)Build Vulnerabilities"
                mnemonic="O">
          </command>
       </menuContribution>
@@ -44,23 +47,29 @@
                id="net.ossindex.eclipse.common.builder.toolbars.OssIndexBuildToolbar">
             <command
                   commandId="net.ossindex.eclipse.common.builder.commands.OssIndexBuildCommand"
-                  icon="icons/sample.gif"
+                  icon="icons/bug.png"
                   id="net.ossindex.eclipse.common.builder.toolbars.OssIndexBuildCommand"
-                  tooltip="OSS Index Build">
+                  tooltip="(Re)Build Vulnerabilities">
+               <visibleWhen
+                     checkEnabled="false">
+                  <not>
+                     <with
+                           variable="net.ossindex.eclipse.common.builder.buildAutomatically.active">
+                        <equals
+                              value="ENABLED">
+                        </equals>
+                     </with>
+                  </not>
+               </visibleWhen>
             </command>
          </toolbar>
       </menuContribution>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
-      <category
-            id="net.ossindex.eclipse.common.builder.commands.category"
-            name="OSS Index Category">
-      </category>
       <command
-            categoryId="net.ossindex.eclipse.common.builder.commands.category"
             id="net.ossindex.eclipse.common.builder.commands.OssIndexBuildCommand"
-            name="OSS Index Build">
+            name="(Re)Build Vulnerabilities">
       </command>
    </extension>
    <extension
@@ -85,7 +94,7 @@
    <extension
          point="org.eclipse.ui.services">
       <sourceProvider
-            provider="net.ossindex.eclipse.common.builder.OssIndexBuildState">
+            provider="net.ossindex.eclipse.common.builder.ManualBuildState">
          <variable
                name="net.ossindex.eclipse.common.builder.buildAutomatically.active"
                priorityLevel="workbench">

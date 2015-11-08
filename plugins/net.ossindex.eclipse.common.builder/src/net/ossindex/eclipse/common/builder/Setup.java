@@ -50,7 +50,7 @@ public class Setup implements IStartup {
 								// Get the source provider service
 								ISourceProviderService sourceProviderService = win.getService(ISourceProviderService.class);
 								// now get my service
-								OssIndexBuildState stateService = (OssIndexBuildState) sourceProviderService.getSourceProvider(OssIndexBuildState.MY_STATE);
+								ManualBuildState stateService = (ManualBuildState) sourceProviderService.getSourceProvider(ManualBuildState.MY_STATE);
 								stateService.updateEnabled();
 							}
 						}
