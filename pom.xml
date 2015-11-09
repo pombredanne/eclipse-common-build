@@ -4,7 +4,7 @@
 
   <groupId>net.ossindex.eclipse</groupId>
   <artifactId>build</artifactId>
-  <version>1.0.1-SNAPSHOT</version>
+  <version>1.0.2-SNAPSHOT</version>
 
   <name>OSS Index Eclipse Common Build</name>
 
@@ -23,9 +23,16 @@
   </modules>
 
   <repositories>
+  <!--
     <repository>
        <id>eclipse-mars</id>
        <url>http://download.eclipse.org/releases/mars</url>
+       <layout>p2</layout>
+    </repository>
+  -->
+    <repository>
+       <id>eclipse-juno</id>
+       <url>http://download.eclipse.org/releases/juno</url>
        <layout>p2</layout>
     </repository>
   </repositories>

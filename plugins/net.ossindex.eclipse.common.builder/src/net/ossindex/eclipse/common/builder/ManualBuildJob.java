@@ -26,13 +26,18 @@
  */
 package net.ossindex.eclipse.common.builder;
 
-import org.eclipse.core.resources.IBuildConfiguration;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 
 /** Provide a "manual build" which is separate from the standard Eclipse build
@@ -43,13 +48,12 @@ import org.eclipse.core.runtime.jobs.Job;
  */
 public class ManualBuildJob extends Job
 {
-
 	private IProject project;
 
 	public ManualBuildJob(IProject project)
 	{
 		super("Manual Build");
-		
+
 		this.project = project;
 	}
 
@@ -61,14 +65,45 @@ public class ManualBuildJob extends Job
 	protected IStatus run(IProgressMonitor monitor)
 	{
 		System.err.println("Start manual build: " + project);
+
+		SubMonitor progress = SubMonitor.convert(monitor);
+
 		try
 		{
-			project.build(IncrementalProjectBuilder.FULL_BUILD, monitor);
+			List<ICommand> commands = new LinkedList<ICommand>();
+			IProjectDescription desc = project.getDescription();
+			for (ICommand command : desc.getBuildSpec())
+			{
+				String name = command.getBuilderName();
+
+				// FIXME: We need a better way to determine which builders belong
+				// to the OSS Index Common Builder Framework. They probably need
+				// to register...
+				if(name.startsWith("org.eclipse")) continue;
+				commands.add(command);
+			}
+
+			progress.setWorkRemaining(commands.size());
+			for (ICommand command : commands)
+			{
+				System.err.println("Running builder " + command.getBuilderName() + "...");
+				try
+				{
+					project.build(IncrementalProjectBuilder.FULL_BUILD, command.getBuilderName(), null, progress.newChild(1));
+				}
+				catch (CoreException e)
+				{
+					e.printStackTrace();
+				}
+			}
 		}
 		catch (CoreException e)
 		{
 			e.printStackTrace();
 		}
+
+		System.err.println("Manual build complete");
+
 		return Status.OK_STATUS;
 	}
 

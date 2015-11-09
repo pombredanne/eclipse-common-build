@@ -5,12 +5,13 @@
 	<parent>
 		<groupId>net.ossindex.eclipse.build</groupId>
 		<artifactId>sites</artifactId>
-		<version>1.0.1-SNAPSHOT</version>
+		<version>1.0.2-SNAPSHOT</version>
 	</parent>
 
 
 	<groupId>net.ossindex.eclipse.sites</groupId>
 	<artifactId>net.ossindex.eclipse.common.builder.p2</artifactId>
+	<version>1.0.2-SNAPSHOT</version>
 
 	<packaging>eclipse-repository</packaging>
 

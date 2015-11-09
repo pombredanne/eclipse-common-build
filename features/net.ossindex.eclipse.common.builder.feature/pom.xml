@@ -8,12 +8,12 @@
 	<parent>
 		<groupId>net.ossindex.eclipse.build</groupId>
 		<artifactId>features</artifactId>
-		<version>1.0.1-SNAPSHOT</version>
+		<version>1.0.2-SNAPSHOT</version>
 	</parent>
 
 	<groupId>net.ossindex.eclipse.features</groupId>
 	<artifactId>net.ossindex.eclipse.common.builder.feature</artifactId>
-
+	<version>1.0.2-SNAPSHOT</version>
 
 	<packaging>eclipse-feature</packaging>
 

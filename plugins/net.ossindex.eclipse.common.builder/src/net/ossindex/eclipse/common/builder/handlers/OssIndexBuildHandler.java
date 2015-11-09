@@ -46,6 +46,7 @@ public class OssIndexBuildHandler extends AbstractHandler {
 					if(obj instanceof IProject)
 					{
 						ManualBuildJob job = new ManualBuildJob((IProject)obj);
+						job.setUser(true);
 						job.setPriority(Job.LONG);
 						job.schedule();
 					}

@@ -8,12 +8,12 @@
 	<parent>
 		<groupId>net.ossindex.eclipse.build</groupId>
 		<artifactId>plugins</artifactId>
-		<version>1.0.1-SNAPSHOT</version>
+		<version>1.0.2-SNAPSHOT</version>
 	</parent>
 
 	<groupId>net.ossindex.eclipse.plugins</groupId>
 	<artifactId>net.ossindex.eclipse.common.builder</artifactId>
-
+	<version>1.0.2-SNAPSHOT</version>
 
 	<packaging>eclipse-plugin</packaging>
 

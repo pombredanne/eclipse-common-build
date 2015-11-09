@@ -48,7 +48,7 @@ public class Setup implements IStartup {
 							if(obj instanceof IProject)
 							{
 								// Get the source provider service
-								ISourceProviderService sourceProviderService = win.getService(ISourceProviderService.class);
+								ISourceProviderService sourceProviderService = (ISourceProviderService) win.getService(ISourceProviderService.class);
 								// now get my service
 								ManualBuildState stateService = (ManualBuildState) sourceProviderService.getSourceProvider(ManualBuildState.MY_STATE);
 								stateService.updateEnabled();
