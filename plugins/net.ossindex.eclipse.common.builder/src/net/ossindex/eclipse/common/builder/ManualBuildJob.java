@@ -36,9 +36,12 @@ import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
+
+import net.ossindex.eclipse.common.Activator;
 
 /** Provide a "manual build" which is separate from the standard Eclipse build
  * process. The manual build is always a full build.
@@ -48,6 +51,8 @@ import org.eclipse.core.runtime.jobs.Job;
  */
 public class ManualBuildJob extends Job
 {
+	public static QualifiedName MANUAL_BUILD_NAME = new QualifiedName(Activator.PLUGIN_ID, "ManualBuild");
+	
 	private IProject project;
 
 	public ManualBuildJob(IProject project)
@@ -89,7 +94,10 @@ public class ManualBuildJob extends Job
 				System.err.println("Running builder " + command.getBuilderName() + "...");
 				try
 				{
+					// Clean needs to know that this is a manual build
+					project.setSessionProperty(MANUAL_BUILD_NAME, true);
 					project.build(IncrementalProjectBuilder.CLEAN_BUILD, command.getBuilderName(), null, progress.newChild(1));
+					project.setSessionProperty(MANUAL_BUILD_NAME, false);
 					project.build(IncrementalProjectBuilder.FULL_BUILD, command.getBuilderName(), null, progress.newChild(1));
 				}
 				catch (CoreException e)

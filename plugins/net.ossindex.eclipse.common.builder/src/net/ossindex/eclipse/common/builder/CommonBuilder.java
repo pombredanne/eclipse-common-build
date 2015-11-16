@@ -94,11 +94,33 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	@Override
 	protected void clean(IProgressMonitor monitor)
 	{
-		CommonBuildVisitor visitor = (CommonBuildVisitor)getBuildVisitor(null);
+		if(shouldClean())
+		{
+			CommonBuildVisitor visitor = (CommonBuildVisitor)getBuildVisitor(null);
 
-		visitor.setProgressMonitor(monitor);
+			visitor.setProgressMonitor(monitor);
 
-		visitor.clean(getProject());
+			visitor.clean(getProject());
+		}
+	}
+
+	/** By default we only clean on a manual build.
+	 * 
+	 * @return
+	 */
+	protected boolean shouldClean()
+	{
+		IProject project = getProject();
+		try
+		{
+			Boolean manualBuild = (Boolean) project.getSessionProperty(ManualBuildJob.MANUAL_BUILD_NAME);
+			if(manualBuild != null) return manualBuild;
+		}
+		catch (CoreException e)
+		{
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	/**
