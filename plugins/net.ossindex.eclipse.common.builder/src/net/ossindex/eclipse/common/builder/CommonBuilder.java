@@ -87,6 +87,20 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 		return null;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.eclipse.core.resources.IncrementalProjectBuilder#clean(org.eclipse.core.runtime.IProgressMonitor)
+	 */
+	@Override
+	protected void clean(IProgressMonitor monitor)
+	{
+		CommonBuildVisitor visitor = (CommonBuildVisitor)getBuildVisitor(null);
+
+		visitor.setProgressMonitor(monitor);
+
+		visitor.clean(getProject());
+	}
+
 	/**
 	 * 
 	 * @param monitor
@@ -296,7 +310,7 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	{
 		SubMonitor progress = SubMonitor.convert(monitor);
 		progress.setWorkRemaining(changed.size());
-		
+
 		int index = 0;
 		int size = changed.size();
 

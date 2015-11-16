@@ -35,7 +35,6 @@ import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.QualifiedName;
-import org.eclipse.core.runtime.SubMonitor;
 
 /** Common code for the build visitors.
  * 
@@ -114,6 +113,50 @@ public abstract class CommonBuildVisitor implements IResourceVisitor, IResourceD
 		catch (CoreException e)
 		{
 			e.printStackTrace();
+		}
+	}
+	
+	/** Un-mark the files as being built.
+	 * 
+	 * @param project
+	 */
+	public void clean(IResource resource)
+	{
+		if(resource instanceof IFile)
+		{
+			if(acceptsSource((IFile)resource))
+			{
+				try
+				{
+					doClean(resource);
+					resource.setPersistentProperty(timestampQualifier, null);
+				}
+				catch (CoreException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		}
+		else if(resource instanceof IContainer)
+		{
+			if(acceptsContainer((IContainer)resource))
+			{
+				try
+				{
+					IResource[] members = ((IContainer)resource).members();
+					if(members != null)
+					{
+						for (IResource member : members)
+						{
+							clean(member);
+						}
+					}
+				}
+				catch (CoreException e)
+				{
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 
@@ -247,5 +290,13 @@ public abstract class CommonBuildVisitor implements IResourceVisitor, IResourceD
 	 * @param monitor
 	 */
 	public abstract void setProgressMonitor(IProgressMonitor monitor);
+
+	/** Extra steps to perform when performing a clean.
+	 * 
+	 * @param resource
+	 */
+	protected void doClean(IResource resource)
+	{
+	}
 
 }

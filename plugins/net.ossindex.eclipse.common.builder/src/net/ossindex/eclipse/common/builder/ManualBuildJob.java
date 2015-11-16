@@ -89,6 +89,7 @@ public class ManualBuildJob extends Job
 				System.err.println("Running builder " + command.getBuilderName() + "...");
 				try
 				{
+					project.build(IncrementalProjectBuilder.CLEAN_BUILD, command.getBuilderName(), null, progress.newChild(1));
 					project.build(IncrementalProjectBuilder.FULL_BUILD, command.getBuilderName(), null, progress.newChild(1));
 				}
 				catch (CoreException e)
