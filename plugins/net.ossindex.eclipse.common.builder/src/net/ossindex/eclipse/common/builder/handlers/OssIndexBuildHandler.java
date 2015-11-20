@@ -5,6 +5,7 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.swt.widgets.Display;
@@ -43,6 +44,10 @@ public class OssIndexBuildHandler extends AbstractHandler {
 				{
 					ITreeSelection s = (ITreeSelection)selection;
 					Object obj = s.getFirstElement();
+					if(obj instanceof IJavaProject)
+					{
+						obj = (IProject)((IJavaProject)obj).getProject();
+					}
 					if(obj instanceof IProject)
 					{
 						ManualBuildJob job = new ManualBuildJob((IProject)obj);
