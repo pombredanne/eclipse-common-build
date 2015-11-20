@@ -1,5 +1,6 @@
 package net.ossindex.eclipse.common.builder.handlers;
 
+import org.eclipse.cdt.core.model.ICProject;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -47,6 +48,10 @@ public class OssIndexBuildHandler extends AbstractHandler {
 					if(obj instanceof IJavaProject)
 					{
 						obj = (IProject)((IJavaProject)obj).getProject();
+					}
+					if(obj instanceof ICProject)
+					{
+						obj = (IProject)((ICProject)obj).getProject();
 					}
 					if(obj instanceof IProject)
 					{
