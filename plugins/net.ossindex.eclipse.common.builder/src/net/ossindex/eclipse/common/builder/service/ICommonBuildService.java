@@ -27,6 +27,7 @@
 package net.ossindex.eclipse.common.builder.service;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.jface.resource.ImageDescriptor;
 
 /** Allows extensions to register their builders and natures to provide
  * customized functionality.
@@ -66,4 +67,22 @@ public interface ICommonBuildService
 	 */
 	boolean supportsProject(IProject project);
 
+	/**
+	 * Brand the menu items and build buttons. The text and icons will depend
+	 * on the particular build application.
+	 * @param text
+	 */
+	void brandManualBuild(String text, ImageDescriptor icon);
+
+	/** Get the menu text
+	 * 
+	 * @return
+	 */
+	String getMenuText();
+
+	/** Get the menu/button icon
+	 * 
+	 * @return
+	 */
+	ImageDescriptor getIcon();
 }

@@ -31,6 +31,11 @@ import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.commands.ICommandService;
 
 /** Implementation of the ICommonBuildService
  * 
@@ -50,6 +55,13 @@ public class CommonBuildServiceImpl implements ICommonBuildService
 	 * Registered builders
 	 */
 	private Set<String> builders = new HashSet<String>();
+
+	/**
+	 * Text for the menu item and button hover
+	 */
+	private String menuText = "Manual Build";
+
+	private ImageDescriptor icon;
 
 	private CommonBuildServiceImpl()
 	{
@@ -110,7 +122,7 @@ public class CommonBuildServiceImpl implements ICommonBuildService
 			{
 				try
 				{
-					if(project.hasNature(nature)) return true;
+					if(project.isOpen() && project.hasNature(nature)) return true;
 				}
 				catch (CoreException e)
 				{
@@ -119,5 +131,56 @@ public class CommonBuildServiceImpl implements ICommonBuildService
 			}
 		}
 		return false;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see net.ossindex.eclipse.common.builder.service.ICommonBuildService#brandManualBuild(java.lang.String, org.eclipse.jface.resource.ImageDescriptor)
+	 */
+	@Override
+	public void brandManualBuild(String text, ImageDescriptor icon)
+	{
+		menuText  = text;
+		this.icon = icon;
+
+		refresh();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see net.ossindex.eclipse.common.builder.service.ICommonBuildService#getMenuText()
+	 */
+	@Override
+	public String getMenuText()
+	{
+		return menuText;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see net.ossindex.eclipse.common.builder.service.ICommonBuildService#getIcon()
+	 */
+	@Override
+	public ImageDescriptor getIcon()
+	{
+		return icon;
+	}
+	
+	/**
+	 * Refresh the UI elements
+	 */
+	private void refresh()
+	{
+		Display.getDefault().syncExec(new Runnable() {
+			@Override
+			public void run() {
+				IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+				ICommandService commandService = (ICommandService) window.getService(ICommandService.class);
+				if (commandService != null)
+				{
+					commandService.refreshElements("net.ossindex.eclipse.common.builder.commands.OssIndexBuildCommand", null);
+				}
+			}
+		});
 	}
 }

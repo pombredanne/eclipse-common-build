@@ -36,8 +36,9 @@
             locationURI="menu:project?after=buildClean">
          <command
                commandId="net.ossindex.eclipse.common.builder.commands.OssIndexBuildCommand"
+               icon="icons/script_lightning.png"
                id="net.ossindex.eclipse.common.builder.menus.OssIndexBuildCommand"
-               label="(Re)Build Vulnerabilities"
+               label="Manual Build"
                mnemonic="O">
          </command>
       </menuContribution>
@@ -47,9 +48,9 @@
                id="net.ossindex.eclipse.common.builder.toolbars.OssIndexBuildToolbar">
             <command
                   commandId="net.ossindex.eclipse.common.builder.commands.OssIndexBuildCommand"
-                  icon="icons/bug.png"
+                  icon="icons/script_lightning.png"
                   id="net.ossindex.eclipse.common.builder.toolbars.OssIndexBuildCommand"
-                  tooltip="(Re)Build Vulnerabilities">
+                  tooltip="Manual Build">
                <visibleWhen
                      checkEnabled="false">
                   <not>
