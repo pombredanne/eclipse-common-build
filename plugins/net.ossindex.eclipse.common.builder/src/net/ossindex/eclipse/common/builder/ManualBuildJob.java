@@ -91,7 +91,7 @@ public class ManualBuildJob extends Job
 				}
 			}
 
-			progress.setWorkRemaining(commands.size());
+			progress.setWorkRemaining(commands.size() * 2);
 			for (ICommand command : commands)
 			{
 				System.err.println("Running builder " + command.getBuilderName() + "...");
