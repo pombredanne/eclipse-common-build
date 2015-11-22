@@ -9,9 +9,11 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.cdt.core;bundle-version="5.4.1";resolution:=optional,
  org.eclipse.jdt.core;bundle-version="3.8.2";resolution:=optional,
  org.eclipse.ui,
- org.eclipse.core.expressions
+ org.eclipse.core.expressions,
+ org.eclipse.ui.workbench
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Export-Package: net.ossindex.eclipse.common,
  net.ossindex.eclipse.common.builder,
  net.ossindex.eclipse.common.builder.service
+Bundle-Vendor: Vör Security Inc.
