@@ -40,8 +40,10 @@ import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.ui.PlatformUI;
 
 import net.ossindex.eclipse.common.Activator;
+import net.ossindex.eclipse.common.builder.service.ICommonBuildService;
 
 /** Provide a "manual build" which is separate from the standard Eclipse build
  * process. The manual build is always a full build.
@@ -75,17 +77,18 @@ public class ManualBuildJob extends Job
 
 		try
 		{
+			// Only perform builds on builders registered with out build service
+			ICommonBuildService buildService = (ICommonBuildService) PlatformUI.getWorkbench().getService(ICommonBuildService.class);
+			
 			List<ICommand> commands = new LinkedList<ICommand>();
 			IProjectDescription desc = project.getDescription();
 			for (ICommand command : desc.getBuildSpec())
 			{
 				String name = command.getBuilderName();
-
-				// FIXME: We need a better way to determine which builders belong
-				// to the OSS Index Common Builder Framework. They probably need
-				// to register...
-				if(name.startsWith("org.eclipse")) continue;
-				commands.add(command);
+				if(buildService.containsBuilder(name))
+				{
+					commands.add(command);
+				}
 			}
 
 			progress.setWorkRemaining(commands.size());

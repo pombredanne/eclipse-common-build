@@ -13,6 +13,8 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.services.ISourceProviderService;
 
+import net.ossindex.eclipse.common.builder.service.ManualBuildState;
+
 /** Register for selection events on projects. This allows us to ensure the
  * OssIndexBuildState is properly set.
  * 

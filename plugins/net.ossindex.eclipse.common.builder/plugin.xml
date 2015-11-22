@@ -83,9 +83,17 @@
                      value="1">
                </count>
                <iterate>
-                  <adapt
-                        type="org.eclipse.core.resources.IProject">
-                  </adapt>
+                  <and>
+                     <adapt
+                           type="org.eclipse.core.resources.IProject">
+                     </adapt>
+                     <with
+                           variable="net.ossindex.eclipse.common.builder.registeredNature.selected">
+                        <equals
+                              value="ENABLED">
+                        </equals>
+                     </with>
+                  </and>
                </iterate>
             </and>
          </with>
@@ -94,12 +102,22 @@
    <extension
          point="org.eclipse.ui.services">
       <sourceProvider
-            provider="net.ossindex.eclipse.common.builder.ManualBuildState">
+            provider="net.ossindex.eclipse.common.builder.service.ManualBuildState">
          <variable
                name="net.ossindex.eclipse.common.builder.buildAutomatically.active"
                priorityLevel="workbench">
          </variable>
+         <variable
+               name="net.ossindex.eclipse.common.builder.registeredNature.selected"
+               priorityLevel="workbench">
+         </variable>
       </sourceProvider>
+      <serviceFactory
+            factoryClass="net.ossindex.eclipse.common.builder.service.CommonBuildServiceFactory">
+         <service
+               serviceClass="net.ossindex.eclipse.common.builder.service.ICommonBuildService">
+         </service>
+      </serviceFactory>
    </extension>
    <extension
          point="org.eclipse.ui.startup">

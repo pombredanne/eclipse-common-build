@@ -24,28 +24,49 @@
  *	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  *	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.ossindex.eclipse.common.builder;
+package net.ossindex.eclipse.common.builder.service;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceDescription;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ITreeSelection;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.AbstractSourceProvider;
+import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.ISources;
+import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.PlatformUI;
 
 /** Properties that can be used in expressions for "enabledWhen" and "visibleWhen"
  * 
  * @author Ken Duck
  *
  */
-public class ManualBuildState extends AbstractSourceProvider
+public class ManualBuildState extends AbstractSourceProvider implements ISelectionListener
 {
 	public final static String MY_STATE = "net.ossindex.eclipse.common.builder.buildAutomatically.active";
+	public final static String NATURE_SELECTED = "net.ossindex.eclipse.common.builder.registeredNature.selected";
 	public final static String ENABLED = "ENABLED";
 	public final static String DISABLED = "DISABLED";
-	
+	private IProject currentProject;
+	private String natureSelectedState = DISABLED;
+
+	public ManualBuildState()
+	{
+		final ManualBuildState that = this;
+		Display.getDefault().asyncExec(new Runnable() {
+			public void run() {
+
+				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getSelectionService().addSelectionListener(that);
+			}
+		});
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.eclipse.ui.ISourceProvider#dispose()
@@ -68,6 +89,7 @@ public class ManualBuildState extends AbstractSourceProvider
 		Map<Object,Object> map = new HashMap<Object,Object>(1);
 		String value = isAutoBuilding ? ENABLED : DISABLED;
 		map.put(MY_STATE, value);
+		map.put(NATURE_SELECTED, natureSelectedState);
 		return map;
 	}
 
@@ -78,7 +100,7 @@ public class ManualBuildState extends AbstractSourceProvider
 	@Override
 	public String[] getProvidedSourceNames()
 	{
-		return new String[] { MY_STATE };
+		return new String[] { MY_STATE, NATURE_SELECTED };
 	}
 
 	/**
@@ -90,7 +112,34 @@ public class ManualBuildState extends AbstractSourceProvider
 		IWorkspaceDescription desc= workspace.getDescription();
 		boolean isAutoBuilding= desc.isAutoBuilding();
 		String value = isAutoBuilding ? ENABLED : DISABLED;
-	    fireSourceChanged(ISources.WORKBENCH, MY_STATE, value);
+		fireSourceChanged(ISources.WORKBENCH, MY_STATE, value);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.eclipse.ui.ISelectionListener#selectionChanged(org.eclipse.ui.IWorkbenchPart, org.eclipse.jface.viewers.ISelection)
+	 */
+	@Override
+	public void selectionChanged(IWorkbenchPart part, ISelection selection)
+	{
+		if(selection instanceof ITreeSelection)
+		{
+			ITreeSelection s = (ITreeSelection)selection;
+			if(s.size() == 1)
+			{
+				ICommonBuildService buildService = (ICommonBuildService) PlatformUI.getWorkbench().getService(ICommonBuildService.class);
+				Object obj = s.getFirstElement();
+				if(obj != null)
+				{
+					System.err.println("SELECTION: " + obj.getClass().getSimpleName());
+					if(obj instanceof IProject)
+					{
+						currentProject = (IProject)obj;
+						natureSelectedState = buildService.supportsProject(currentProject) ? ENABLED : DISABLED;
+						fireSourceChanged(ISources.WORKBENCH, NATURE_SELECTED, natureSelectedState);
+					}
+				}
+			}
+		}
+	}
 }
