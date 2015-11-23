@@ -74,7 +74,6 @@ public class ConcurrentBuildManagerJob extends Job implements IBuildJobListener
 		{
 			System.err.println("Check completion...");
 			// Get out if cancelled
-			System.err.println("CANELED 1?" + progress.isCanceled());
 			if(progress.isCanceled() || size == 0)
 			{
 				buildManager.shutdownNow();

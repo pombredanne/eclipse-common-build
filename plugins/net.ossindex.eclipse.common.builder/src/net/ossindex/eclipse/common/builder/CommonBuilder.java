@@ -95,7 +95,6 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	protected void clean(IProgressMonitor monitor)
 	{
 		// Handle cancellation
-		System.err.println("CANELED 4?" + monitor.isCanceled());
 		if(monitor.isCanceled()) return;
 		
 		if(shouldClean())
@@ -150,6 +149,7 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 			{
 				if(visitor != null)
 				{
+					visitor.setProgressMonitor(monitor);
 					List<IFile> changed = getFilesToBuild(getProject(), visitor);
 					buildFiles(changed, monitor);
 				}
@@ -308,6 +308,7 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	private void buildFiles(List<IFile> changed, IProgressMonitor monitor)
 	{
 		IResourceVisitor visitor = getBuildVisitor(null);
+		((CommonBuildVisitor)visitor).setProgressMonitor(monitor);
 		if(visitor instanceof IConcurrentBuildVisitor)
 		{
 			buildConcurrent(visitor, changed, monitor);

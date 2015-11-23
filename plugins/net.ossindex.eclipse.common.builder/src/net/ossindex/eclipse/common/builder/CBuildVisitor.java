@@ -77,19 +77,14 @@ public abstract class CBuildVisitor extends CommonBuildVisitor implements IResou
 	public boolean visit(IResource resource) throws CoreException
 	{
 		// Handle cancellation
-		System.err.println("CANELED 2?" + progress.isCanceled());
 		if(progress.isCanceled()) return false;
 
 		if(cutils.isCppCompilationUnit(resource))
 		{
 			if(isDirty((IFile)resource))
 			{
-				// Regardless of the amount of progress reported so far,
-				// use 2% of the space remaining in the monitor to process the next node.
-				progress.setWorkRemaining(10);
 				build(resource);
 				markBuilt((IFile)resource);
-				progress.worked(1);
 			}
 		}
 		return true;

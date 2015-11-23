@@ -96,7 +96,6 @@ public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IRe
 	public boolean visit(IResource resource) throws CoreException
 	{
 		// Handle cancellation
-		System.err.println("CANELED 3?" + progress.isCanceled());
 		if(progress.isCanceled()) return false;
 		
 		IJavaUtils utils = null;
@@ -108,7 +107,6 @@ public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IRe
 		}
 		
 		// Handle cancellation
-		System.err.println("CANELED 5?" + progress.isCanceled());
 		if(progress.isCanceled()) return false;
 
 		//		System.err.println("VISIT: " + resource);
@@ -131,15 +129,11 @@ public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IRe
 			{
 				//System.out.println("  Class VISIT: " + resource);
 
-				// Regardless of the amount of progress reported so far,
-				// use 2% of the space remaining in the monitor to process the next node.
 				IFile sourceFile = utils.getSourceFile((IFile)resource);
 				if(isDirty(sourceFile))
 				{
-					progress.setWorkRemaining(10);
 					buildClass(resource);
 					markBuilt(sourceFile);
-					progress.worked(1);
 				}
 			}
 		}
