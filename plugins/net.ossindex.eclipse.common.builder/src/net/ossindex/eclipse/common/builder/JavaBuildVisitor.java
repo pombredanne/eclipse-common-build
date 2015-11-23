@@ -95,6 +95,10 @@ public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IRe
 	@Override
 	public boolean visit(IResource resource) throws CoreException
 	{
+		// Handle cancellation
+		System.err.println("CANELED 3?" + progress.isCanceled());
+		if(progress.isCanceled()) return false;
+		
 		IJavaUtils utils = null;
 		IProject project = resource.getProject();
 		synchronized(this)
@@ -104,6 +108,7 @@ public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IRe
 		}
 		
 		// Handle cancellation
+		System.err.println("CANELED 5?" + progress.isCanceled());
 		if(progress.isCanceled()) return false;
 
 		//		System.err.println("VISIT: " + resource);

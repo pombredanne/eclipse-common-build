@@ -94,6 +94,10 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	@Override
 	protected void clean(IProgressMonitor monitor)
 	{
+		// Handle cancellation
+		System.err.println("CANELED 4?" + monitor.isCanceled());
+		if(monitor.isCanceled()) return;
+		
 		if(shouldClean())
 		{
 			CommonBuildVisitor visitor = (CommonBuildVisitor)getBuildVisitor(null);
