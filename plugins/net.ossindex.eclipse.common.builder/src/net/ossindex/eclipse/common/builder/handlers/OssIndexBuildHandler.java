@@ -2,13 +2,11 @@ package net.ossindex.eclipse.common.builder.handlers;
 
 import java.util.Map;
 
-import org.eclipse.cdt.core.model.ICProject;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ITreeSelection;
@@ -20,6 +18,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.IElementUpdater;
 import org.eclipse.ui.menus.UIElement;
 
+import net.ossindex.eclipse.common.Utils;
 import net.ossindex.eclipse.common.builder.ManualBuildJob;
 import net.ossindex.eclipse.common.builder.service.ICommonBuildService;
 
@@ -52,14 +51,7 @@ public class OssIndexBuildHandler extends AbstractHandler implements IElementUpd
 				{
 					ITreeSelection s = (ITreeSelection)selection;
 					Object obj = s.getFirstElement();
-					if(obj instanceof IJavaProject)
-					{
-						obj = (IProject)((IJavaProject)obj).getProject();
-					}
-					if(obj instanceof ICProject)
-					{
-						obj = (IProject)((ICProject)obj).getProject();
-					}
+					obj = Utils.getResource(obj);
 					if(obj instanceof IProject)
 					{
 						ManualBuildJob job = new ManualBuildJob((IProject)obj);
