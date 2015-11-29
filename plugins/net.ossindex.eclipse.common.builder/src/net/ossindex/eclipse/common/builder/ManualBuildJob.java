@@ -94,13 +94,24 @@ public class ManualBuildJob extends Job
 			progress.setWorkRemaining(commands.size() * 2);
 			for (ICommand command : commands)
 			{
+				System.err.println("Cleaning " + command.getBuilderName() + "...");
+				// Clean needs to know that this is a manual build
+				project.setSessionProperty(MANUAL_BUILD_NAME, true);
+				try
+				{
+					project.build(IncrementalProjectBuilder.CLEAN_BUILD, command.getBuilderName(), null, progress.newChild(1));
+				}
+				catch (CoreException e)
+				{
+					e.printStackTrace();
+				}
+				project.setSessionProperty(MANUAL_BUILD_NAME, false);
+			}
+			for (ICommand command : commands)
+			{
 				System.err.println("Running builder " + command.getBuilderName() + "...");
 				try
 				{
-					// Clean needs to know that this is a manual build
-					project.setSessionProperty(MANUAL_BUILD_NAME, true);
-					project.build(IncrementalProjectBuilder.CLEAN_BUILD, command.getBuilderName(), null, progress.newChild(1));
-					project.setSessionProperty(MANUAL_BUILD_NAME, false);
 					project.build(IncrementalProjectBuilder.FULL_BUILD, command.getBuilderName(), null, progress.newChild(1));
 				}
 				catch (CoreException e)
