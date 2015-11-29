@@ -101,9 +101,12 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 		{
 			CommonBuildVisitor visitor = (CommonBuildVisitor)getBuildVisitor(null);
 
-			visitor.setProgressMonitor(monitor);
-
-			visitor.clean(getProject());
+			if(visitor != null)
+			{
+				visitor.setProgressMonitor(monitor);
+	
+				visitor.clean(getProject());
+			}
 		}
 	}
 
