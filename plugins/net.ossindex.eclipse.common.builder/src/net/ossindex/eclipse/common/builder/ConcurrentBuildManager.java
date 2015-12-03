@@ -92,10 +92,18 @@ public class ConcurrentBuildManager implements IBuildJobListener
 	public ConcurrentBuildManager(IResourceVisitor visitor, boolean blocking)
 	{
 		this.visitor = visitor;
-		executor = Executors.newFixedThreadPool(MAX_JOBS);
+		int jobCount = MAX_JOBS;
+		
+		if(((CommonBuildVisitor)visitor).getMaxJobs() > 0)
+		{
+			jobCount = ((CommonBuildVisitor)visitor).getMaxJobs();
+		}
+		
+		executor = Executors.newFixedThreadPool(jobCount);
+		
 		if(blocking)
 		{
-			jobs = new ArrayBlockingQueue<IFile>(MAX_JOBS);
+			jobs = new ArrayBlockingQueue<IFile>(jobCount);
 		}
 		else
 		{

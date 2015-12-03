@@ -299,4 +299,13 @@ public abstract class CommonBuildVisitor implements IResourceVisitor, IResourceD
 	{
 	}
 
+	/** Maximum number of jobs in a concurrent build situation
+	 * 
+	 * @return
+	 */
+	public int getMaxJobs()
+	{
+		return 0;
+	}
+
 }

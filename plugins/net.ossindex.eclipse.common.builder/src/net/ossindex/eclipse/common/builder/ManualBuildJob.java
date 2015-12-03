@@ -26,23 +26,26 @@
  */
 package net.ossindex.eclipse.common.builder;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.resources.ICommand;
+import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.ui.PlatformUI;
 
-import net.ossindex.eclipse.common.Activator;
 import net.ossindex.eclipse.common.builder.service.ICommonBuildService;
 
 /** Provide a "manual build" which is separate from the standard Eclipse build
@@ -53,15 +56,15 @@ import net.ossindex.eclipse.common.builder.service.ICommonBuildService;
  */
 public class ManualBuildJob extends Job
 {
-	public static QualifiedName MANUAL_BUILD_NAME = new QualifiedName(Activator.PLUGIN_ID, "ManualBuild");
-	
-	private IProject project;
+	public static final String MANUAL_BUILD = "MANUAL_BUILD";
+	public static final String MANUAL_BUILD_ALL = "MANUAL_BUILD_ALL";
+	public List<IResource> resources;
 
-	public ManualBuildJob(IProject project)
+	public ManualBuildJob(List<IResource> resources)
 	{
 		super("Manual Build");
 
-		this.project = project;
+		this.resources = resources;
 	}
 
 	/*
@@ -71,15 +74,50 @@ public class ManualBuildJob extends Job
 	@Override
 	protected IStatus run(IProgressMonitor monitor)
 	{
-		System.err.println("Start manual build: " + project);
+		if(!resources.isEmpty())
+		{
+			IProject project = null;
+			for (IResource resource : resources)
+			{
+				if(resource instanceof IProject)
+				{
+					project = (IProject) resource;
+				}
+			}
+			// One of the selected items is the project, do full build
+			if(project != null)
+			{
+				// Full build
+				return run(project, null, monitor);
+			}
+			else
+			{
+				// Otherwise do an incremental build
+				project = resources.get(0).getProject();
+				return run(project, resources, monitor);
+			}
+		}
+		return Status.OK_STATUS;
+	}
+	/** Run a build on the selected project, optionally passing a list of resources
+	 * as build arguments.
+	 * 
+	 * @param project
+	 * @param resources 
+	 * @param monitor
+	 * @return
+	 */
+	private IStatus run(IProject project, List<IResource> resources, IProgressMonitor monitor)
+	{
+		System.err.println("Start manual build... ");
 
 		SubMonitor progress = SubMonitor.convert(monitor);
 
 		try
 		{
-			// Only perform builds on builders registered with out build service
+			// Only perform builds on builders registered with our build service
 			ICommonBuildService buildService = (ICommonBuildService) PlatformUI.getWorkbench().getService(ICommonBuildService.class);
-			
+
 			List<ICommand> commands = new LinkedList<ICommand>();
 			IProjectDescription desc = project.getDescription();
 			for (ICommand command : desc.getBuildSpec())
@@ -91,28 +129,30 @@ public class ManualBuildJob extends Job
 				}
 			}
 
-			progress.setWorkRemaining(commands.size() * 2);
-			for (ICommand command : commands)
+			Map<String,String> args = new HashMap<String,String>();
+
+			if(resources != null)
 			{
-				System.err.println("Cleaning " + command.getBuilderName() + "...");
-				// Clean needs to know that this is a manual build
-				project.setSessionProperty(MANUAL_BUILD_NAME, true);
-				try
+				// For a build of selected resources, ensure the resources
+				// are added to a lookup table.
+				args.put("type", MANUAL_BUILD);
+				for(IResource resource: resources)
 				{
-					project.build(IncrementalProjectBuilder.CLEAN_BUILD, command.getBuilderName(), null, progress.newChild(1));
+					addFiles(args, resource);
 				}
-				catch (CoreException e)
-				{
-					e.printStackTrace();
-				}
-				project.setSessionProperty(MANUAL_BUILD_NAME, false);
 			}
+			else
+			{
+				args.put("type", MANUAL_BUILD_ALL);
+			}
+
+			progress.setWorkRemaining(commands.size());
 			for (ICommand command : commands)
 			{
 				System.err.println("Running builder " + command.getBuilderName() + "...");
 				try
 				{
-					project.build(IncrementalProjectBuilder.FULL_BUILD, command.getBuilderName(), null, progress.newChild(1));
+					project.build(IncrementalProjectBuilder.FULL_BUILD, command.getBuilderName(), args, progress.newChild(1));
 				}
 				catch (CoreException e)
 				{
@@ -126,8 +166,36 @@ public class ManualBuildJob extends Job
 		}
 
 		System.err.println("Manual build complete");
-
 		return Status.OK_STATUS;
+	}
+
+	/** Recursively add all files to the lookup map
+	 * 
+	 * @param map
+	 * @param resource
+	 */
+	private void addFiles(Map<String, String> map, IResource resource)
+	{
+		if(resource instanceof IFile)
+		{
+			map.put(resource.getLocation().toString(), "BUILD");
+		}
+		else if(resource instanceof IContainer)
+		{
+			try
+			{
+				IResource[] children = ((IContainer)resource).members();
+				for (IResource child : children)
+				{
+					addFiles(map, child);
+				}
+			}
+			catch (CoreException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 
 }

@@ -1,11 +1,15 @@
 package net.ossindex.eclipse.common.builder.handlers;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelection;
@@ -18,7 +22,6 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.IElementUpdater;
 import org.eclipse.ui.menus.UIElement;
 
-import net.ossindex.eclipse.common.Utils;
 import net.ossindex.eclipse.common.builder.ManualBuildJob;
 import net.ossindex.eclipse.common.builder.service.ICommonBuildService;
 
@@ -50,11 +53,24 @@ public class OssIndexBuildHandler extends AbstractHandler implements IElementUpd
 				if(selection instanceof ITreeSelection)
 				{
 					ITreeSelection s = (ITreeSelection)selection;
-					Object obj = s.getFirstElement();
-					obj = Utils.getResource(obj);
-					if(obj instanceof IProject)
+					List<IResource> resources = new LinkedList<IResource>();
+					for(@SuppressWarnings("unchecked")
+					Iterator<Object> it = s.iterator(); it.hasNext();)
 					{
-						ManualBuildJob job = new ManualBuildJob((IProject)obj);
+						Object o = it.next();
+						if (o instanceof IAdaptable)
+						{
+							IAdaptable adapt=(IAdaptable)o;
+							o = (IResource)adapt.getAdapter(IResource.class);
+						}
+						if(o instanceof IResource)
+						{
+							resources.add((IResource)o);
+						}
+					}
+					if(!resources.isEmpty())
+					{
+						ManualBuildJob job = new ManualBuildJob(resources);
 						job.setUser(true);
 						job.setPriority(Job.LONG);
 						job.schedule();

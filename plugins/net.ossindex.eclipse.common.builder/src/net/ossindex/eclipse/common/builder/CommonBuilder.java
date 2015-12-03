@@ -75,6 +75,28 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 		// get the project to build  
 		getProject();  
 
+		if(args != null)
+		{
+			// On a manual build all, force a full clean
+			if(ManualBuildJob.MANUAL_BUILD_ALL.equals(args.get("type")))
+			{
+				CommonBuildVisitor visitor = (CommonBuildVisitor)getBuildVisitor(null);
+
+				if(visitor != null)
+				{
+					visitor.setProgressMonitor(monitor);
+
+					visitor.clean(getProject());
+				}
+			}
+			// On a manual build, force a special incremental build
+			if(ManualBuildJob.MANUAL_BUILD.equals(args.get("type")))
+			{
+				manualIncrementalBuild(args, monitor);
+				return null;
+			}
+		}
+
 		if(kind == FULL_BUILD)
 		{
 			fullBuild(monitor);
@@ -96,42 +118,12 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	{
 		// Handle cancellation
 		if(monitor.isCanceled()) return;
-		
-		if(shouldClean())
-		{
-			CommonBuildVisitor visitor = (CommonBuildVisitor)getBuildVisitor(null);
-
-			if(visitor != null)
-			{
-				visitor.setProgressMonitor(monitor);
-	
-				visitor.clean(getProject());
-			}
-		}
-	}
-
-	/** By default we only clean on a manual build.
-	 * 
-	 * @return
-	 */
-	protected boolean shouldClean()
-	{
-		IProject project = getProject();
-		try
-		{
-			Boolean manualBuild = (Boolean) project.getSessionProperty(ManualBuildJob.MANUAL_BUILD_NAME);
-			if(manualBuild != null) return manualBuild;
-		}
-		catch (CoreException e)
-		{
-			e.printStackTrace();
-		}
-		return false;
 	}
 
 	/**
 	 * 
 	 * @param monitor
+	 * @param args 
 	 */
 	private void fullBuild(IProgressMonitor monitor)
 	{
@@ -171,6 +163,66 @@ public abstract class CommonBuilder extends IncrementalProjectBuilder
 	 * @return
 	 */
 	protected abstract IResourceVisitor getBuildVisitor(IProgressMonitor monitor);
+
+	/** Special manual incremental build
+	 * 
+	 * @param args
+	 * @param monitor
+	 */
+	private void manualIncrementalBuild(Map<String, String> args, IProgressMonitor monitor)
+	{
+		final CommonBuildVisitor visitor = (CommonBuildVisitor)getDeltaVisitor(null);
+
+		if(visitor != null)
+		{
+			IProject project = getProject();
+			// Get a full list of requested files
+			final List<IFile> changed = getChangedFiles(project, args, visitor);
+			
+			// Clean the files
+			for (IFile file : changed)
+			{
+				visitor.clean(file);
+			}
+			buildFiles(changed, monitor);
+		}
+	}
+
+	/** Get a list of files from a project that were requested for a manual build
+	 * 
+	 * @param resource
+	 * @param args
+	 * @param visitor
+	 * @return
+	 */
+	private List<IFile> getChangedFiles(IResource resource, Map<String, String> args, CommonBuildVisitor visitor)
+	{
+		final List<IFile> changed = new LinkedList<IFile>();
+		if(resource instanceof IFile)
+		{
+			if(visitor.accepts((IFile)resource) && args.containsKey(resource.getLocation().toString()))
+			{
+				changed.add((IFile) resource);
+			}
+		}
+		else if(resource instanceof IContainer)
+		{
+			try
+			{
+				IResource[] children = ((IContainer)resource).members();
+				for (IResource child : children)
+				{
+					List<IFile> files = getChangedFiles(child, args, visitor);
+					changed.addAll(files);
+				}
+			}
+			catch (CoreException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		return changed;
+	}
 
 	/**
 	 * 

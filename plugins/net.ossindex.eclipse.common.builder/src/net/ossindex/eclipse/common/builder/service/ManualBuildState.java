@@ -27,12 +27,15 @@
 package net.ossindex.eclipse.common.builder.service;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceDescription;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.swt.widgets.Display;
@@ -125,21 +128,43 @@ public class ManualBuildState extends AbstractSourceProvider implements ISelecti
 		if(selection instanceof ITreeSelection)
 		{
 			ITreeSelection s = (ITreeSelection)selection;
-			if(s.size() == 1)
+			IProject project = null;
+			ICommonBuildService buildService = (ICommonBuildService) PlatformUI.getWorkbench().getService(ICommonBuildService.class);
+			System.err.println("SELECTION: ");
+
+			for(@SuppressWarnings("unchecked")Iterator<Object> it = s.iterator(); it.hasNext();)
 			{
-				ICommonBuildService buildService = (ICommonBuildService) PlatformUI.getWorkbench().getService(ICommonBuildService.class);
-				Object obj = s.getFirstElement();
+				Object obj = it.next();
 				if(obj != null)
 				{
-					System.err.println("SELECTION: " + obj.getClass().getSimpleName());
-					if(obj instanceof IProject)
+					if (obj instanceof IAdaptable)
 					{
-						currentProject = (IProject)obj;
-						natureSelectedState = buildService.supportsProject(currentProject) ? ENABLED : DISABLED;
-						fireSourceChanged(ISources.WORKBENCH, NATURE_SELECTED, natureSelectedState);
+						IAdaptable adapt=(IAdaptable)obj;
+						obj = (IResource)adapt.getAdapter(IResource.class);
+					}
+					System.err.println("  * " + obj.getClass().getSimpleName());
+					if(obj instanceof IResource)
+					{
+						currentProject = ((IResource)obj).getProject();
+						if(project == null)
+						{
+							project = currentProject;
+						}
+						else if(!project.equals(currentProject))
+						{
+							// If there are selected files from different
+							// projects then reject them for now. This
+							// complicates the build.
+							natureSelectedState = DISABLED;
+							fireSourceChanged(ISources.WORKBENCH, NATURE_SELECTED, natureSelectedState);
+							return;
+						}
 					}
 				}
 			}
+
+			natureSelectedState = buildService.supportsProject(currentProject) ? ENABLED : DISABLED;
+			fireSourceChanged(ISources.WORKBENCH, NATURE_SELECTED, natureSelectedState);
 		}
 	}
 }

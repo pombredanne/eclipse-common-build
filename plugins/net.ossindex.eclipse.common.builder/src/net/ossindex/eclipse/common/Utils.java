@@ -44,12 +44,13 @@ public class Utils
 {
 	public static IJavaUtils jutils = getJavaUtils();
 	public static ICUtils cutils = getCUtils();
-	
+
 	/** Get the IResource for JDT and CDT elements
-	 * 
+	 *
 	 * @param object
 	 * @return
 	 */
+	@Deprecated
 	public static Object getResource(Object object)
 	{
 		return jutils.getResource(cutils.getResource(object));
@@ -147,7 +148,7 @@ public class Utils
 	private static void resetBuilderTimestamp(IResource resource, QualifiedName qname) throws CoreException
 	{
 		resource.setPersistentProperty(qname, null);
-		
+
 		if(resource instanceof IContainer)
 		{
 			IResource[] resources = ((IContainer)resource).members();

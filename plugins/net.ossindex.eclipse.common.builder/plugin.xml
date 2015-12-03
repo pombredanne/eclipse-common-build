@@ -79,24 +79,19 @@
             id="net.ossindex.eclipse.common.builder.ProjectSelected">
          <with
                variable="selection">
-            <and>
-               <count
-                     value="1">
-               </count>
-               <iterate>
-                  <and>
-                     <adapt
-                           type="org.eclipse.core.resources.IProject">
-                     </adapt>
-                     <with
-                           variable="net.ossindex.eclipse.common.builder.registeredNature.selected">
-                        <equals
-                              value="ENABLED">
-                        </equals>
-                     </with>
-                  </and>
-               </iterate>
-            </and>
+            <iterate>
+               <and>
+                  <adapt
+                        type="org.eclipse.core.resources.IResource">
+                  </adapt>
+                  <with
+                        variable="net.ossindex.eclipse.common.builder.registeredNature.selected">
+                     <equals
+                           value="ENABLED">
+                     </equals>
+                  </with>
+               </and>
+            </iterate>
          </with>
       </definition>
    </extension>
