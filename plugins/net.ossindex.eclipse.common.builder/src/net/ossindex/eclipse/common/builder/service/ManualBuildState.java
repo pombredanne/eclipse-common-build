@@ -130,7 +130,6 @@ public class ManualBuildState extends AbstractSourceProvider implements ISelecti
 			ITreeSelection s = (ITreeSelection)selection;
 			IProject project = null;
 			ICommonBuildService buildService = (ICommonBuildService) PlatformUI.getWorkbench().getService(ICommonBuildService.class);
-			System.err.println("SELECTION: ");
 
 			for(@SuppressWarnings("unchecked")Iterator<Object> it = s.iterator(); it.hasNext();)
 			{
@@ -142,7 +141,9 @@ public class ManualBuildState extends AbstractSourceProvider implements ISelecti
 						IAdaptable adapt=(IAdaptable)obj;
 						obj = (IResource)adapt.getAdapter(IResource.class);
 					}
-					System.err.println("  * " + obj.getClass().getSimpleName());
+				}
+				if(obj != null)
+				{
 					if(obj instanceof IResource)
 					{
 						currentProject = ((IResource)obj).getProject();
