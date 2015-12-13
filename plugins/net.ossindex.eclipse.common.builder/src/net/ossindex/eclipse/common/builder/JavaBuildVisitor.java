@@ -32,6 +32,7 @@ import java.util.Map;
 import net.ossindex.eclipse.common.IJavaUtils;
 import net.ossindex.eclipse.common.Utils;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -251,4 +252,28 @@ public abstract class JavaBuildVisitor extends CommonBuildVisitor implements IRe
 	{
 		progress.setTaskName(name);
 	}
+	
+	/** Un-mark the files as being built.
+	 * 
+	 * @param project
+	 */
+	public void clean(IResource resource)
+	{
+		
+		if(resource instanceof IFile)
+		{
+			
+			if(!buildsClass())
+			{
+				if(isJavaFile(resource))
+				{
+					IFile classFile = utils.getClassFile((IFile)resource);
+					super.clean(classFile);
+				}
+			}
+		}
+		
+		super.clean(resource);
+	}
+
 }

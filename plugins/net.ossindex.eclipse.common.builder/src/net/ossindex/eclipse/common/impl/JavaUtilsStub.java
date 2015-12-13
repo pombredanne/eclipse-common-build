@@ -134,6 +134,11 @@ public class JavaUtilsStub implements IJavaUtils
 	public void clean(String[] builderIds) {
 	}
 
+	@Override
+	public IFile getClassFile(IFile sourceFile) {
+		return null;
+	}
+
 
 
 }

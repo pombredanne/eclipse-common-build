@@ -407,6 +407,51 @@ public class JavaUtils extends CommonUtils implements IJavaUtils
 		}
 		return ifile;
 	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see net.ossindex.eclipse.common.IJavaUtils#getClassFile(org.eclipse.core.resources.IFile)
+	 */
+	@Override
+	public IFile getClassFile(IFile sourceFile)
+	{
+		if(sourceFile == null || !sourceFile.getName().endsWith(".java")) return null;
+		
+		String myPath = sourceFile.getFullPath().toString();
+		// Remove .java
+		myPath = myPath.substring(0, myPath.length() - 5);
+		
+		// Find matching source path
+		for(IPath path: sourcePaths)
+		{
+			String spath = path.toString();
+			
+			if(myPath.startsWith(spath))
+			{
+				myPath = myPath.substring(spath.length());
+				break;
+			}
+		}
+		
+		String myClass = myPath + ".class";
+		
+		// Find matching class path
+		for(IPath classPath: targetPaths)
+		{
+			classPath = classPath.removeFirstSegments(1);
+			IFolder cp = project.getFolder(classPath);
+			if(cp != null)
+			{
+				IFile cls = cp.getFile(myClass);
+				if(cls.exists())
+				{
+					return cls;
+				}
+			}
+		}
+		return null;
+	}
+
 
 	/** Given a "class" string, create the "*.java" string.
 	 * 
@@ -432,4 +477,5 @@ public class JavaUtils extends CommonUtils implements IJavaUtils
 		path = path + ".java";
 		return path;
 	}
+
 }

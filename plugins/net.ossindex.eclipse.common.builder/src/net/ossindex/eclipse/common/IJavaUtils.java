@@ -110,4 +110,10 @@ public interface IJavaUtils
 	 */
 	public void clean(String[] builderIds);
 
+	/**
+	 * 
+	 * @return
+	 */
+	public IFile getClassFile(IFile sourceFile);
+
 }

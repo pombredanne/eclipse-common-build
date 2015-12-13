@@ -46,6 +46,8 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.ui.PlatformUI;
 
+import net.ossindex.eclipse.common.IJavaUtils;
+import net.ossindex.eclipse.common.Utils;
 import net.ossindex.eclipse.common.builder.service.ICommonBuildService;
 
 /** Provide a "manual build" which is separate from the standard Eclipse build
@@ -59,6 +61,7 @@ public class ManualBuildJob extends Job
 	public static final String MANUAL_BUILD = "MANUAL_BUILD";
 	public static final String MANUAL_BUILD_ALL = "MANUAL_BUILD_ALL";
 	public List<IResource> resources;
+	private IJavaUtils jutils = Utils.getJavaUtils();
 
 	public ManualBuildJob(List<IResource> resources)
 	{
@@ -112,6 +115,7 @@ public class ManualBuildJob extends Job
 		System.err.println("Start manual build... ");
 
 		SubMonitor progress = SubMonitor.convert(monitor);
+		jutils.setProject(project);
 
 		try
 		{
@@ -179,6 +183,8 @@ public class ManualBuildJob extends Job
 		if(resource instanceof IFile)
 		{
 			map.put(resource.getLocation().toString(), "BUILD");
+			IFile classFile = jutils.getClassFile((IFile)resource);
+			if(classFile != null) map.put(classFile.getLocation().toString(), "BUILD");
 		}
 		else if(resource instanceof IContainer)
 		{
